@@ -10,9 +10,16 @@ export default function Home() {
     e.preventDefault();
     if (!url) return;
 
+    let finalUrl = url.trim();
+
+    // Lógica para adicionar "https://" se o protocolo não for encontrado
+    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+      finalUrl = 'https://' + finalUrl;
+    }
+    
     // Nós codificamos a URL para que ela possa ser usada com segurança
     // como um parâmetro na barra de endereços.
-    const encodedUrl = encodeURIComponent(url);
+    const encodedUrl = encodeURIComponent(finalUrl);
     
     // Redireciona o usuário para a página de QR Code
     router.push(`/${encodedUrl}`);
@@ -36,7 +43,7 @@ export default function Home() {
           type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="Cole sua URL aqui..."
+          placeholder="Cole sua URL aqui (ex: kasper-labs.com)"
           className="url-input"
           required
         />
