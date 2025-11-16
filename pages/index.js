@@ -36,8 +36,6 @@ export default function Home() {
       case 'wifi':
         // Formato padrão Wi-Fi: WIFI:T:<SECURITY>;S:<SSID>;P:<PASSWORD>;;
         const securityType = wifiData.security || 'WPA';
-        // A dupla barra invertida \\ é para escapar o ponto e vírgula no Next.js/Router,
-        // mas o encodeURIComponent já trata isso. Vamos usar o formato simples e deixar o encode cuidar.
         return `WIFI:T:${securityType};S:${wifiData.ssid};P:${wifiData.password};;`;
 
       case 'text':
@@ -56,12 +54,12 @@ export default function Home() {
     e.preventDefault();
     const content = formatContent();
     
-    if (!content || (mode === 'wifi' && (!wifiData.ssid || !wifiData.password))) {
-      // Poderíamos mostrar uma mensagem de erro, mas por enquanto apenas retornamos
+    // Simplificando a validação para Wi-Fi e E-mail (o input 'required' já ajuda)
+    if (!content || (mode === 'wifi' && (!wifiData.ssid || !wifiData.security))) {
       console.error("Conteúdo vazio ou incompleto.");
       return;
     }
-
+    
     // Codifica o conteúdo final e redireciona
     const encodedContent = encodeURIComponent(content);
     router.push(`/${encodedContent}`);
@@ -99,7 +97,7 @@ export default function Home() {
               onChange={(e) => setWifiData({ ...wifiData, password: e.target.value })}
               placeholder="Senha"
               className="url-input"
-              required
+              required={wifiData.security !== 'nopass'} // Senha só é obrigatória se não for 'Sem Senha'
             />
             <select
               value={wifiData.security}
@@ -109,7 +107,7 @@ export default function Home() {
             >
               <option value="WPA">WPA/WPA2</option>
               <option value="WEP">WEP</option>
-              <option value="nopass">Sem Senha</option>
+              <option value="nopass">Sem Senha (Aberto)</option>
             </select>
           </>
         );
@@ -192,7 +190,7 @@ export default function Home() {
         </button>
       </form>
 
-      {/* Hiperlink para o projeto */}
+      {/* Hiperlink para o projeto, agora usando a classe de botão cinza */}
       <div className="project-link">
         <a href="https://www.kasper-labs.com" target="_blank" rel="noopener noreferrer">
           Conheça o projeto

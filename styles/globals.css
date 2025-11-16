@@ -31,7 +31,7 @@ body {
   margin-bottom: 2rem;
   line-height: 1.1;
   max-width: 90vw; /* Garante que caiba na tela */
-  white-space: nowrap; /* CORREÇÃO: Garante que o texto fique em uma única linha */
+  white-space: nowrap; /* Garante que o texto fique em uma única linha */
   overflow: hidden; 
 }
 
@@ -58,7 +58,7 @@ body {
 
 /* Estilo da Caixa de Input / Textarea */
 .url-input {
-  font-family: 'Roboto Mono', monospace; /* Usando Roboto Mono */
+  font-family: 'Roboto Mono', monospace;
   font-size: 1rem;
   padding: 0.75rem 1rem;
   background-color: #1c1c1c; /* Preto Suave */
@@ -76,9 +76,9 @@ body {
   box-shadow: 0 0 10px #007aff;
 }
 
-/* Estilo do Botão Principal (Gerar QR Code) - Agora Roboto Mono */
+/* Estilo do Botão Principal (Gerar QR Code) - Roboto Mono */
 .submit-button {
-  font-family: 'Roboto Mono', monospace; /* ALTERADO para Roboto Mono */
+  font-family: 'Roboto Mono', monospace; 
   font-weight: 700;
   font-size: 1rem;
   padding: 0.75rem 1.5rem;
@@ -90,7 +90,7 @@ body {
   transition: all 0.2s ease-in-out;
   min-width: 200px;
   box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
-  text-decoration: none; /* Garante que links com essa classe pareçam botões */
+  text-decoration: none; 
   display: inline-block; 
 }
 
@@ -133,12 +133,21 @@ body {
 }
 
 /* Estilos da Página de QR Code */
+/* CORREÇÃO: Layout flex para alinhar QR Code e Detalhes lado a lado em telas maiores */
 .qr-visual-section {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Padrão em telas pequenas */
   align-items: center;
-  gap: 1.5rem;
+  gap: 2rem; /* Aumenta a separação */
   margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .qr-visual-section {
+    flex-direction: row; /* Lado a lado em telas maiores */
+    align-items: flex-start; /* Alinha o topo */
+    max-width: 800px;
+  }
 }
 
 /* Container do QR Code em si */
@@ -148,15 +157,18 @@ body {
   border-radius: 12px;
   box-shadow: 0 0 25px rgba(0, 122, 255, 0.5);
   display: inline-block;
+  /* Garante que o QR code tenha o mesmo tamanho que o painel de detalhes */
+  min-width: 286px; /* 256px do QR + 30px de padding */
 }
 
-/* Detalhes do Conteúdo (NOVO) */
+/* Detalhes do Conteúdo */
 .content-details-box {
   background-color: #1c1c1c; /* Preto Suave */
   padding: 1.5rem;
   border-radius: 8px;
   width: 100%;
-  max-width: 400px;
+  max-width: 400px; /* Mantém um bom limite de largura */
+  min-width: 286px; /* CORREÇÃO: Garante o mesmo tamanho que o QR Code */
   text-align: left;
   border: 1px solid #007aff;
 }
@@ -211,7 +223,7 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Estilo específico para o link de "conheça o projeto" - BOTÃO CINZA */
+/* Estilo específico para o link de "conheça o projeto" - BOTÃO CINZA/HIPERLINK */
 .project-link {
   margin-top: 2rem;
   font-size: 0.9rem;
@@ -219,7 +231,7 @@ a:hover {
 
 .project-link a {
   /* Estilo de Botão Cinza/Soft Black */
-  font-family: 'Roboto Mono', monospace; /* ALTERADO para Roboto Mono */
+  font-family: 'Roboto Mono', monospace; 
   font-weight: 700;
   font-size: 1rem;
   padding: 0.75rem 1.5rem;
