@@ -51,6 +51,13 @@ export default function Home() {
           Gerar QR Code
         </button>
       </form>
+
+      {/* NOVO: Hiperlink para o projeto */}
+      <div className="project-link">
+        <a href="https://www.kasper-labs.com" target="_blank" rel="noopener noreferrer">
+          Conheça o projeto
+        </a>
+      </div>
     </div>
   );
 }

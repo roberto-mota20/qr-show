@@ -31,7 +31,9 @@ body {
   color: #ffffff;
   margin-bottom: 2rem;
   line-height: 1.1;
-  max-width: 400px;
+  max-width: 90vw; /* Garante que caiba na tela */
+  white-space: nowrap; /* CORREÇÃO: Garante que o texto fique em uma única linha */
+  overflow: hidden; /* Oculta qualquer excesso (embora o 'white-space' resolva) */
 }
 
 .kasper-logo .blue-text {
@@ -86,12 +88,13 @@ body {
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   min-width: 200px;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
 }
 
 .submit-button:hover {
   background-color: #ffffff;
   color: #007aff;
-  box-shadow: 0 0 15px #007aff;
+  box-shadow: 0 0 20px #007aff;
 }
 
 /* Estilos da Página de QR Code */
@@ -120,4 +123,12 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+/* Estilo específico para o link de "conheça o projeto" */
+.project-link {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  font-family: 'Lexend', sans-serif;
+  font-weight: 700;
 }
