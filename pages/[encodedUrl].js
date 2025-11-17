@@ -94,6 +94,15 @@ export default function QrCodePage() {
   const [dotsStyle, setDotsStyle] = useState('square'); // Padrão Quadrado
   const [cornerStyle, setCornerStyle] = useState('square'); // Padrão Quadrado
 
+  // --- NOVO ESTADO PARA O ACCORDION ---
+  const [openAccordion, setOpenAccordion] = useState('cores'); // 'cores' é o primeiro aberto
+
+  // Função para controlar o accordion
+  const handleAccordion = (id) => {
+    // Se clicar no que já está aberto, fecha. Senão, abre o novo.
+    setOpenAccordion(prev => prev === id ? null : id);
+  };
+
   // Memoiza as opções de QR Code
   const options = useMemo(() => ({
     width: 256,
@@ -152,7 +161,7 @@ export default function QrCodePage() {
     reader.readAsDataURL(file);
   };
 
-  const onDownload = () => {
+  const onDownload = (e) => {
     const container = document.getElementById('qr-container-download'); 
     if (!container) return;
     html2canvas(container, {
@@ -218,8 +227,10 @@ export default function QrCodePage() {
           <div className="personalization-panel">
             
             {/* Cores */}
-            <details open> {/* Deixa o primeiro aberto por padrão */}
-              <summary>Cores</summary>
+            <details open={openAccordion === 'cores'}>
+              <summary onClick={(e) => { e.preventDefault(); handleAccordion('cores'); }}>
+                Cores
+              </summary>
               <div className="accordion-content">
                 <div className="control-group">
                   <div className="control-item">
@@ -245,8 +256,10 @@ export default function QrCodePage() {
             </details>
 
             {/* Estilo dos Pontos */}
-            <details>
-              <summary>Estilo dos Pontos</summary>
+            <details open={openAccordion === 'pontos'}>
+              <summary onClick={(e) => { e.preventDefault(); handleAccordion('pontos'); }}>
+                Estilo dos Pontos
+              </summary>
               <StyleChipSelector
                 options={DOT_STYLES}
                 current={dotsStyle}
@@ -255,8 +268,10 @@ export default function QrCodePage() {
             </details>
             
             {/* Estilo dos Cantos */}
-            <details>
-              <summary>Estilo dos Cantos</summary>
+            <details open={openAccordion === 'cantos'}>
+              <summary onClick={(e) => { e.preventDefault(); handleAccordion('cantos'); }}>
+                Estilo dos Cantos
+              </summary>
               <StyleChipSelector
                 options={CORNER_STYLES}
                 current={cornerStyle}
@@ -265,8 +280,10 @@ export default function QrCodePage() {
             </details>
 
             {/* Logo */}
-            <details>
-              <summary>Logo (Centro)</summary>
+            <details open={openAccordion === 'logo'}>
+              <summary onClick={(e) => { e.preventDefault(); handleAccordion('logo'); }}>
+                Logo (Centro)
+              </summary>
               <div className="accordion-content">
                 <div className="control-group">
                   <div className="control-item file-upload">
