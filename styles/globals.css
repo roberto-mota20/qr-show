@@ -34,9 +34,8 @@ body {
   max-width: 100%; /* CORREÇÃO: Respeita o contêiner pai */
   white-space: normal; /* Permite quebra de linha */
   overflow: hidden; 
-  word-break: break-word; 
-  word-wrap: break-word; 
-  overflow-wrap: break-word; 
+  /* CORREÇÃO: Removidas as propriedades de quebra de palavra mais agressivas */
+  overflow-wrap: break-word; /* Mantém a propriedade moderna */
 }
 
 /* Mídia query para ajustar logo em telas pequenas */
@@ -494,6 +493,11 @@ a:hover {
     width: 450px; /* Largura FIXA da coluna da direita */
     max-width: 450px;
     margin: 0;
+    
+    /* CORREÇÃO: Alinha o painel e os botões ao centro da coluna */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .personalization-panel {
