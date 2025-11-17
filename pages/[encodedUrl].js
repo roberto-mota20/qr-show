@@ -1,10 +1,14 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import Head from 'next/head';
-import QRCodeStyling from 'qr-code-styling'; // CORRIGIDO
+import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
 
-// Componente de Análise de Conteúdo (Parse)
+// Tipos de estilos disponíveis para preview
+const DOT_STYLES = ['rounded', 'dots', 'classy', 'classy-rounded', 'square', 'extra-rounded'];
+const CORNER_STYLES = ['rounded', 'square', 'dot'];
+
+// Componente de Análise de Conteúdo (Parse) - Sem mudanças
 const parseQrContent = (content) => {
   if (content.startsWith('WIFI:')) {
     const data = {};
@@ -31,7 +35,7 @@ const parseQrContent = (content) => {
   }
 };
 
-// Componente de Detalhes do Conteúdo
+// Componente de Detalhes do Conteúdo - Sem mudanças
 const ContentDetails = ({ content }) => {
   const { type, details } = parseQrContent(content);
   const Title = ({ text }) => <h3 className="detail-title">{text}</h3>;
@@ -63,101 +67,74 @@ const ContentDetails = ({ content }) => {
   return ( <div className="content-details-box"> <p className="type-badge">Tipo: {type}</p> {detailContent} </div> );
 };
 
-
 // --- PÁGINA PRINCIPAL DO QR CODE ---
 export default function QrCodePage() {
   const router = useRouter();
   const { encodedUrl } = router.query;
   const [decodedContent, setDecodedContent] = useState('');
   
-  // Ref para o contêiner do QR Code
   const ref = useRef(null);
-  // Instância do QR Code
   const [qrInstance, setQrInstance] = useState(null);
 
   // --- Estados de Personalização ---
   const [logo, setLogo] = useState(null);
-  const [dotsColor, setDotsColor] = useState('#000000'); // Preto Puro
-  const [bgColor, setBgColor] = useState('#ffffff'); // Branco Puro
-  const [dotsStyle, setDotsStyle] = useState('rounded');
-  const [cornerStyle, setCornerStyle] = useState('rounded');
+  const [dotsColor, setDotsColor] = useState('#007aff'); // CORREÇÃO: Azul Padrão
+  const [bgColor, setBgColor] = useState('#ffffff'); 
+  const [dotsStyle, setDotsStyle] = useState('square'); // CORREÇÃO: Quadrado Padrão
+  const [cornerStyle, setCornerStyle] = useState('square'); // CORREÇÃO: Quadrado Padrão
 
-  // Opções Iniciais do QR Code
-  const initialOptions = {
+  // Memoiza as opções de QR Code para garantir que o objeto seja estável
+  const options = useMemo(() => ({
     width: 256,
     height: 256,
-    type: 'canvas', // Canvas é melhor para download e logo
+    type: 'canvas', 
     data: decodedContent,
     image: logo,
-    dotsOptions: {
-      color: dotsColor,
-      type: dotsStyle
-    },
-    backgroundOptions: {
-      color: bgColor,
-    },
-    cornersSquareOptions: {
-      color: dotsColor, // Cor dos cantos segue a cor dos pontos
-      type: cornerStyle
-    },
+    dotsOptions: { color: dotsColor, type: dotsStyle },
+    backgroundOptions: { color: bgColor },
+    cornersSquareOptions: { color: dotsColor, type: cornerStyle },
     imageOptions: {
       crossOrigin: 'anonymous',
       margin: 4,
-      // Aumenta a correção de erro se houver logo
       imageSize: 0.3,
     },
     qrOptions: {
-      errorCorrectionLevel: 'M', // Padrão
+      errorCorrectionLevel: logo ? 'H' : 'M', // Aumenta a correção se houver logo
     }
-  };
+  }), [decodedContent, logo, dotsColor, bgColor, dotsStyle, cornerStyle]);
 
   // 1. Inicializa a instância do QR Code
   useEffect(() => {
+    // CORREÇÃO CRÍTICA: O Next.js renderiza o módulo no servidor antes do 'window' existir.
+    // Inicializamos a instância apenas no lado do cliente (browser).
     if (typeof window !== 'undefined' && !qrInstance) {
-      const qr = new QRCodeStyling(initialOptions);
+      const qr = new QRCodeStyling(options);
       setQrInstance(qr);
     }
-  }, []); // Executa apenas uma vez
+  }, [qrInstance, options]); 
 
-  // 2. Anexa o QR Code ao DOM quando a instância estiver pronta
+  // 2. Anexa o QR Code ao DOM e atualiza quando as opções ou conteúdo mudam
   useEffect(() => {
-    if (qrInstance && ref.current) {
-      // Limpa o contêiner antes de anexar
-      ref.current.innerHTML = '';
-      qrInstance.append(ref.current);
-    }
-  }, [qrInstance]);
+    if (encodedUrl && qrInstance) {
+        try {
+            const content = decodeURIComponent(encodedUrl);
+            setDecodedContent(content);
+            
+            // Atualiza o QR Code com as opções mais recentes
+            qrInstance.update(options);
 
-  // 3. Atualiza o conteúdo (data) do QR Code quando a URL mudar
-  useEffect(() => {
-    if (encodedUrl) {
-      try {
-        const content = decodeURIComponent(encodedUrl);
-        setDecodedContent(content);
-        if (qrInstance) {
-          qrInstance.update({ data: content });
+            if (ref.current) {
+                // Anexa o QR Code ao DOM se ainda não tiver sido anexado
+                if (ref.current.children.length === 0) {
+                    qrInstance.append(ref.current);
+                }
+            }
+        } catch (e) {
+            console.error("URL inválida:", e);
         }
-      } catch (e) {
-        console.error("URL inválida:", e);
-      }
     }
-  }, [encodedUrl, qrInstance]);
+  }, [encodedUrl, qrInstance, options]);
 
-  // 4. Observador para ATUALIZAR o QR Code quando a personalização mudar
-  useEffect(() => {
-    if (!qrInstance) return;
-
-    qrInstance.update({
-      dotsOptions: { color: dotsColor, type: dotsStyle },
-      backgroundOptions: { color: bgColor },
-      cornersSquareOptions: { color: dotsColor, type: cornerStyle },
-      image: logo,
-      qrOptions: {
-        // Aumenta a correção de erro para 'H' (High) se houver um logo
-        errorCorrectionLevel: logo ? 'H' : 'M'
-      }
-    });
-  }, [logo, dotsColor, bgColor, dotsStyle, cornerStyle, qrInstance]);
 
   // --- Funções de Manipulação ---
 
@@ -171,20 +148,71 @@ export default function QrCodePage() {
     reader.readAsDataURL(file);
   };
 
-  // Função de Download (com padding)
   const onDownload = () => {
-    const container = document.getElementById('qr-container-download'); // O contêiner com padding
+    const container = document.getElementById('qr-container-download'); 
     if (!container) return;
 
     html2canvas(container, {
-      backgroundColor: null, // Mantém fundo transparente se houver
-      useCORS: true // Para a logo
+      backgroundColor: null, 
+      useCORS: true 
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = 'kasper-labs-qrcode.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
+  };
+
+  // --- Componente de Preview ---
+  const StylePreview = ({ type, style, currentStyle, onClick }) => {
+    const previewRef = useRef(null);
+
+    // Inicializa e desenha o preview
+    useEffect(() => {
+      if (previewRef.current) {
+        // Opções mínimas para o preview
+        const previewOptions = {
+          width: 50,
+          height: 50,
+          type: 'svg',
+          data: "https://kasper-labs.com", // Dados de teste
+          dotsOptions: { 
+            color: '#007aff', 
+            type: type === 'dots' ? style : 'square' // Pega o estilo de pontos
+          },
+          cornersSquareOptions: {
+            color: '#007aff',
+            type: type === 'corners' ? style : 'square' // Pega o estilo de cantos
+          },
+          backgroundOptions: { color: '#ffffff' },
+          imageOptions: { margin: 0 }
+        };
+        
+        // Se já tiver um preview, apenas atualiza
+        if (previewRef.current.children.length > 0) {
+            // Se o estilo de preview for de cantos, garantimos que os pontos sejam quadrados
+            if (type === 'corners') previewOptions.dotsOptions.type = 'square';
+            
+            // Cria uma nova instância para desenhar no DOM
+            const qr = new QRCodeStyling(previewOptions);
+            qr.append(previewRef.current);
+        } else {
+             const qr = new QRCodeStyling(previewOptions);
+             qr.append(previewRef.current);
+        }
+      }
+    }, [style, type]);
+    
+    // CORREÇÃO: Usamos o useEffect para garantir que o preview seja desenhado
+    // Usamos um novo componente para garantir o ciclo de vida
+    return (
+        <button 
+            className={`style-preview-button ${style === currentStyle ? 'active' : ''}`}
+            onClick={onClick}
+        >
+            <div ref={previewRef} className="style-preview-canvas" />
+        </button>
+    )
   };
 
   return (
@@ -238,30 +266,35 @@ export default function QrCodePage() {
           </div>
         </div>
 
-        {/* Controles de Estilo */}
-        <div className="control-group">
-          <div className="control-item">
-            <label htmlFor="dotsStyle">Estilo (Pontos)</label>
-            <select id="dotsStyle" value={dotsStyle} onChange={(e) => setDotsStyle(e.target.value)}>
-              <option value="rounded">Redondo</option>
-              <option value="dots">Pontos</option>
-              <option value="classy">Elegante</option>
-              <option value="classy-rounded">Elegante (Curvo)</option>
-              <option value="square">Quadrado</option>
-              <option value="extra-rounded">Extra Curvo</option>
-            </select>
-          </div>
-          <div className="control-item">
-            <label htmlFor="cornerStyle">Estilo (Cantos)</label>
-            <select id="cornerStyle" value={cornerStyle} onChange={(e) => setCornerStyle(e.target.value)}>
-              <option value="rounded">Redondo</option>
-              <option value="square">Quadrado</option>
-              <option value="dot">Ponto</option>
-            </select>
-          </div>
+        {/* --- SELETOR DE ESTILO (PREVIEWS) --- */}
+        <h3 className="panel-title" style={{marginTop: '1.5rem'}}>Estilo dos Pontos</h3>
+        <div className="style-selector-grid">
+            {DOT_STYLES.map(style => (
+                <StylePreview 
+                    key={style}
+                    type="dots"
+                    style={style}
+                    currentStyle={dotsStyle}
+                    onClick={() => setDotsStyle(style)}
+                />
+            ))}
+        </div>
+        
+        <h3 className="panel-title" style={{marginTop: '1.5rem'}}>Estilo dos Cantos</h3>
+        <div className="style-selector-grid">
+            {CORNER_STYLES.map(style => (
+                <StylePreview 
+                    key={style}
+                    type="corners"
+                    style={style}
+                    currentStyle={cornerStyle}
+                    onClick={() => setCornerStyle(style)}
+                />
+            ))}
         </div>
 
         {/* Upload de Logo */}
+        <h3 className="panel-title" style={{marginTop: '1.5rem'}}>Logo (Aumenta a Correção de Erro)</h3>
         <div className="control-group">
           <div className="control-item file-upload">
             <label htmlFor="logoUpload" className="file-label">

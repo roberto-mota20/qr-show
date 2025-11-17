@@ -171,8 +171,9 @@ body {
   border-radius: 12px;
   box-shadow: 0 0 25px rgba(0, 122, 255, 0.5);
   display: inline-block;
-  min-width: 288px; /* CORREÇÃO: 256px do QR + 2rem (32px) de padding */
-  box-sizing: border-box; /* Garante que o padding não quebre o min-width */
+  min-width: 288px; 
+  max-width: 288px; /* Adiciona max-width para desktop */
+  box-sizing: border-box; 
 }
 /* O qrcode-styling cria um canvas/svg, centralizamos ele */
 .qr-container div {
@@ -187,15 +188,16 @@ body {
   border-radius: 8px;
   width: 100%;
   max-width: 400px; /* Mantém um bom limite de largura */
-  min-width: 288px; /* CORREÇÃO: Garante o mesmo tamanho que o QR Code */
+  min-width: 288px; 
+  max-width: 450px; /* Aumenta a largura máxima para dar mais espaço */
   text-align: left;
   border: 1px solid #007aff;
-  box-sizing: border-box; /* Garante que o padding não quebre o min-width */
+  box-sizing: border-box; 
 }
 
 .type-badge {
   font-family: 'Lexend', sans-serif;
-  font-weight: 700; /* CORREÇÃO: Peso diminuído de 900 */
+  font-weight: 700; 
   color: #007aff;
   margin-top: 0;
   margin-bottom: 1rem;
@@ -206,7 +208,7 @@ body {
 
 .detail-title {
     font-family: 'Lexend', sans-serif;
-    font-weight: 400; /* CORREÇÃO: Peso diminuído de 700 */
+    font-weight: 400; 
     font-size: 1rem;
     color: #ffffff;
     margin-top: 0.5rem;
@@ -271,12 +273,12 @@ a:hover {
   text-decoration: none;
 }
 
-/* --- NOVOS ESTILOS DE PERSONALIZAÇÃO --- */
+/* --- ESTILOS DE PERSONALIZAÇÃO --- */
 .personalization-panel {
   background-color: #1c1c1c;
   border: 1px solid #007aff;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem; /* Reduz o padding */
   margin-top: 2rem;
   max-width: 800px;
   width: 100%;
@@ -290,9 +292,11 @@ a:hover {
   border-bottom: 1px solid #007aff;
   padding-bottom: 0.5rem;
   margin-top: 0;
+  margin-bottom: 1rem;
   text-align: left;
 }
 
+/* Grupo de Controles (Cores e Upload) */
 .control-group {
   display: flex;
   flex-direction: column;
@@ -320,6 +324,7 @@ a:hover {
   font-weight: 400;
 }
 
+/* Inputs de Cor */
 .control-item input[type="color"] {
   width: 100%;
   height: 40px;
@@ -327,8 +332,11 @@ a:hover {
   border: 1px solid #007aff;
   border-radius: 4px;
   cursor: pointer;
+  /* Garante que o input de cor se pareça com o seletor */
+  box-sizing: border-box;
 }
 
+/* Selects */
 .control-item select {
   font-family: 'Roboto Mono', monospace;
   font-size: 1rem;
@@ -340,8 +348,9 @@ a:hover {
   width: 100%;
 }
 
+/* Upload de Arquivo */
 .control-item.file-upload input[type="file"] {
-  display: none; /* Esconde o input padrão */
+  display: none; 
 }
 
 .file-label {
@@ -359,22 +368,44 @@ a:hover {
   box-sizing: border-box;
 }
 
-.file-label:hover {
-  background-color: #ffffff;
-  color: #007aff;
+/* Seletor de Estilo Visual (Grid de Previews) */
+.style-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 10px;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  border-top: 1px solid #1c1c1c; /* Separador */
+  padding-top: 1rem;
 }
 
-.remove-logo-btn {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.9rem;
-  background-color: transparent;
-  color: #ff453a; /* Vermelho (para remoção) */
-  border: 1px solid #ff453a;
-  border-radius: 4px;
-  padding: 0.5rem;
+.style-preview-button {
+  background-color: #1c1c1c;
+  border: 1px solid transparent;
+  padding: 5px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: border-color 0.2s;
 }
 
+.style-preview-button.active {
+  border-color: #007aff; /* Borda azul para o ativo */
+  box-shadow: 0 0 8px #007aff;
+}
+
+.style-preview-button:hover {
+  border-color: #ffffff;
+}
+
+.style-preview-canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1; 
+  background-color: white; /* Fundo branco para a pré-visualização */
+  border-radius: 4px;
+}
+
+/* Botões de Ação */
 .action-buttons {
   display: flex;
   flex-direction: column;
@@ -408,19 +439,33 @@ a:hover {
 
 .qr-container-simple {
   background-color: #ffffff;
-  padding: 1rem;
-  border-radius: 12px;
+  /* CORREÇÃO MODO SIMPLES: Borda removida e padding diminuído */
+  padding: 0.5rem; 
+  border-radius: 0; /* CORREÇÃO MODO SIMPLES: Removendo o arredondado */
   display: inline-block;
   margin-top: 1rem;
+  position: relative; /* Para posicionar o payload */
 }
+
 .qr-container-simple div {
   margin: 0 auto;
 }
 
 .simple-payload {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  /* CORREÇÃO MODO SIMPLES: Manda o texto para dentro do padding branco */
   font-family: 'Roboto Mono', monospace;
-  color: #cccccc;
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  word-break: break-all; /* Quebra a URL para não estourar o layout */
+  color: #000000; /* Preto */
+  background: rgba(255, 255, 255, 0.85); /* Fundo quase branco */
+  padding: 4px 8px; 
+  font-size: 0.6rem;
+  font-weight: 700;
+  word-break: break-all;
+  max-height: 20px;
+  overflow: hidden;
+  line-height: 1;
+  text-align: center;
 }

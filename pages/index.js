@@ -191,7 +191,7 @@ export default function Home() {
         </button>
       </form>
 
-      {/* Hiperlink para o projeto, agora usando a classe de botão cinza */}
+      {/* Hiperlink para o projeto, usando <a> tag para ser um hiperlink real */}
       <div className="project-link">
         <a href="https://www.kasper-labs.com" target="_blank" rel="noopener noreferrer">
           Conheça o projeto

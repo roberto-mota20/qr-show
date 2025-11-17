@@ -1,27 +1,27 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
-import QRCodeStyling from 'qr-code-styling'; // CORRIGIDO
+import QRCodeStyling from 'qr-code-styling';
 
-// Opções de QR Code para o modo simples
+// Opções de QR Code para o modo simples (QUADRADÃO)
 const qrOptions = {
   width: 256,
   height: 256,
   type: 'svg',
   dotsOptions: {
     color: '#000000', // Preto Puro
-    type: 'rounded'
+    type: 'square' // CORREÇÃO: Quadrado
   },
   backgroundOptions: {
     color: '#ffffff', // Branco Puro
   },
   cornersSquareOptions: {
     color: '#000000',
-    type: 'rounded'
+    type: 'square' // CORREÇÃO: Quadrado
   },
   imageOptions: {
     crossOrigin: 'anonymous',
-    margin: 4
+    margin: 0 // Removendo margin
   }
 };
 
@@ -67,18 +67,19 @@ export default function SimpleQrCodePage() {
         <title>Gerador Qr | Kasper-Labs</title>
       </Head>
 
+      {/* CORREÇÃO: Logo responsiva */}
       <h1 className="kasper-logo">
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
       {/* O QR Code será montado aqui */}
-      <div className="qr-container-simple" ref={ref} />
-
-      {/* Exibe o payload (conteúdo) */}
-      <div className="simple-payload">
-        {decodedContent}
+      <div className="qr-container-simple" ref={ref} >
+        {/* Payload que ficará SOBRE a área branca (estilizado no CSS) */}
+        <div className="simple-payload">
+            {decodedContent}
+        </div>
       </div>
-
+      
     </div>
   );
 }
