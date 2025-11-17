@@ -10,18 +10,18 @@ const qrOptions = {
   type: 'svg',
   dotsOptions: {
     color: '#000000', // Preto Puro
-    type: 'square' // CORREÇÃO: Quadrado
+    type: 'square' // Padrão Quadrado
   },
   backgroundOptions: {
     color: '#ffffff', // Branco Puro
   },
   cornersSquareOptions: {
     color: '#000000',
-    type: 'square' // CORREÇÃO: Quadrado
+    type: 'square' // Padrão Quadrado
   },
   imageOptions: {
     crossOrigin: 'anonymous',
-    margin: 4 // CORREÇÃO: Adiciona uma pequena margem interna
+    margin: 4 // Adiciona uma pequena margem interna
   }
 };
 
@@ -69,15 +69,17 @@ export default function SimpleQrCodePage() {
         <title>Gerador Qr | Kasper-Labs</title>
       </Head>
 
-      {/* CORREÇÃO: Logo responsiva (classe do globals.css) */}
+      {/* Logo responsiva (classe do globals.css) */}
       <h1 className="kasper-logo">
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {/* O QR Code será montado aqui */}
+      {/* CORREÇÃO: O contêiner agora é um flex-column.
+        O QR Code é montado no 'ref' e o payload é um item separado
+        abaixo dele, mas dentro do mesmo contêiner branco.
+      */}
       <div className="qr-container-simple">
         <div ref={ref} />
-        {/* Payload que ficará SOBRE a área branca (estilizado no CSS) */}
         <div className="simple-payload">
             {decodedContent}
         </div>

@@ -19,9 +19,8 @@ const CORNER_STYLES = [
   { id: 'dot', label: 'Ponto' },
 ];
 
-// Componente de Análise de Conteúdo (Parse) - Sem mudanças
+// Componente de Análise de Conteúdo (Parse)
 const parseQrContent = (content) => {
-// ... (código de parse inalterado) ...
   if (content.startsWith('WIFI:')) {
     const data = {};
     const parts = content.substring(5).slice(0, -2).split(';').map(p => p.trim());
@@ -47,9 +46,8 @@ const parseQrContent = (content) => {
   }
 };
 
-// Componente de Detalhes do Conteúdo - Sem mudanças
+// Componente de Detalhes do Conteúdo
 const ContentDetails = ({ content }) => {
-// ... (código de detalhes inalterado) ...
   const { type, details } = parseQrContent(content);
   const Title = ({ text }) => <h3 className="detail-title">{text}</h3>;
   const DetailItem = ({ label, value }) => (
@@ -91,7 +89,7 @@ export default function QrCodePage() {
 
   // --- Estados de Personalização ---
   const [logo, setLogo] = useState(null);
-  const [dotsColor, setDotsColor] = useState('#000000'); // CORREÇÃO: Padrão Preto
+  const [dotsColor, setDotsColor] = useState('#000000'); // Padrão Preto
   const [bgColor, setBgColor] = useState('#ffffff'); 
   const [dotsStyle, setDotsStyle] = useState('square'); // Padrão Quadrado
   const [cornerStyle, setCornerStyle] = useState('square'); // Padrão Quadrado
@@ -196,106 +194,114 @@ export default function QrCodePage() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {decodedContent ? (
-        <div className="qr-visual-section">
-          {/* O QR Code será montado aqui */}
-          <div id="qr-container-download" className="qr-container">
-            <div ref={ref} />
-          </div>
-
-          {/* Componente para exibir os detalhes do conteúdo */}
-          <ContentDetails content={decodedContent} />
-        </div>
-      ) : (
-        <p>Gerando seu QR Code...</p>
-      )}
-
-      {/* --- NOVO PAINEL DE PERSONALIZAÇÃO (ACCORDION) --- */}
-      <div className="personalization-panel">
+      {/* --- CORREÇÃO: NOVO GRID DE LAYOUT --- */}
+      <div className="main-layout-grid">
         
-        {/* Cores */}
-        <details>
-          <summary>Cores</summary>
-          <div className="accordion-content">
-            <div className="control-group">
-              <div className="control-item">
-                <label htmlFor="dotsColor">Cor (Pontos)</label>
-                <input 
-                  id="dotsColor"
-                  type="color" 
-                  value={dotsColor} 
-                  onChange={(e) => setDotsColor(e.target.value)} 
-                />
-              </div>
-              <div className="control-item">
-                <label htmlFor="bgColor">Cor (Fundo)</label>
-                <input 
-                  id="bgColor"
-                  type="color" 
-                  value={bgColor} 
-                  onChange={(e) => setBgColor(e.target.value)} 
-                />
-              </div>
+        {/* --- COLUNA ESQUERDA (VISUAL) --- */}
+        {decodedContent ? (
+          <div className="qr-visual-section">
+            {/* O QR Code será montado aqui */}
+            <div id="qr-container-download" className="qr-container">
+              <div ref={ref} />
             </div>
+
+            {/* Componente para exibir os detalhes do conteúdo */}
+            <ContentDetails content={decodedContent} />
           </div>
-        </details>
+        ) : (
+          <p>Gerando seu QR Code...</p>
+        )}
 
-        {/* Estilo dos Pontos */}
-        <details>
-          <summary>Estilo dos Pontos</summary>
-          <StyleChipSelector
-            options={DOT_STYLES}
-            current={dotsStyle}
-            onChange={setDotsStyle}
-          />
-        </details>
-        
-        {/* Estilo dos Cantos */}
-        <details>
-          <summary>Estilo dos Cantos</summary>
-          <StyleChipSelector
-            options={CORNER_STYLES}
-            current={cornerStyle}
-            onChange={setCornerStyle}
-          />
-        </details>
-
-        {/* Logo */}
-        <details>
-          <summary>Logo (Centro)</summary>
-          <div className="accordion-content">
-            <div className="control-group">
-              <div className="control-item file-upload">
-                <label htmlFor="logoUpload" className="file-label">
-                  {logo ? 'Logo Carregada' : 'Enviar Logo (PNG/JPG)'}
-                </label>
-                <input 
-                  id="logoUpload"
-                  type="file" 
-                  accept="image/png, image/jpeg"
-                  onChange={onLogoUpload} 
-                />
+        {/* --- COLUNA DIREITA (CONTROLES) --- */}
+        <div className="right-column-wrapper">
+          {/* --- NOVO PAINEL DE PERSONALIZAÇÃO (ACCORDION) --- */}
+          <div className="personalization-panel">
+            
+            {/* Cores */}
+            <details open> {/* Deixa o primeiro aberto por padrão */}
+              <summary>Cores</summary>
+              <div className="accordion-content">
+                <div className="control-group">
+                  <div className="control-item">
+                    <label htmlFor="dotsColor">Cor (Pontos)</label>
+                    <input 
+                      id="dotsColor"
+                      type="color" 
+                      value={dotsColor} 
+                      onChange={(e) => setDotsColor(e.target.value)} 
+                    />
+                  </div>
+                  <div className="control-item">
+                    <label htmlFor="bgColor">Cor (Fundo)</label>
+                    <input 
+                      id="bgColor"
+                      type="color" 
+                      value={bgColor} 
+                      onChange={(e) => setBgColor(e.target.value)} 
+                    />
+                  </div>
+                </div>
               </div>
-              {logo && (
-                <button onClick={() => setLogo(null)} className="remove-logo-btn" style={{flex: 0.5, alignSelf: 'center'}}>
-                  Remover
-                </button>
-              )}
-            </div>
+            </details>
+
+            {/* Estilo dos Pontos */}
+            <details>
+              <summary>Estilo dos Pontos</summary>
+              <StyleChipSelector
+                options={DOT_STYLES}
+                current={dotsStyle}
+                onChange={setDotsStyle}
+              />
+            </details>
+            
+            {/* Estilo dos Cantos */}
+            <details>
+              <summary>Estilo dos Cantos</summary>
+              <StyleChipSelector
+                options={CORNER_STYLES}
+                current={cornerStyle}
+                onChange={setCornerStyle}
+              />
+            </details>
+
+            {/* Logo */}
+            <details>
+              <summary>Logo (Centro)</summary>
+              <div className="accordion-content">
+                <div className="control-group">
+                  <div className="control-item file-upload">
+                    <label htmlFor="logoUpload" className="file-label">
+                      {logo ? 'Logo Carregada' : 'Enviar Logo (PNG/JPG)'}
+                    </label>
+                    <input 
+                      id="logoUpload"
+                      type="file" 
+                      accept="image/png, image/jpeg"
+                      onChange={onLogoUpload} 
+                    />
+                  </div>
+                  {logo && (
+                    <button onClick={() => setLogo(null)} className="remove-logo-btn" style={{flex: 0.5, alignSelf: 'center'}}>
+                      Remover
+                    </button>
+                  )}
+                </div>
+              </div>
+            </details>
+
           </div>
-        </details>
 
-      </div>
-
-      {/* Botões de Ação */}
-      <div className="action-buttons">
-        <button onClick={onDownload} className="submit-button download-btn">
-          Baixar QR Code (PNG)
-        </button>
-        <a href="/" className="submit-button" style={{ minWidth: '200px' }}>
-          Gerar outro QR Code
-        </a>
-      </div>
+          {/* Botões de Ação */}
+          <div className="action-buttons">
+            <button onClick={onDownload} className="submit-button download-btn">
+              Baixar QR Code (PNG)
+            </button>
+            <a href="/" className="submit-button" style={{ minWidth: '200px' }}>
+              Gerar outro QR Code
+            </a>
+          </div>
+        </div> {/* Fim da right-column-wrapper */}
+      </div> {/* Fim da main-layout-grid */}
     </div>
   );
 }
