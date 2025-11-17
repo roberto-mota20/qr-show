@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
-import QRCodeStyling from 'qrcode-styling';
+import QRCodeStyling from 'qr-code-styling'; // CORRIGIDO
 
 // Opções de QR Code para o modo simples
 const qrOptions = {

@@ -1,10 +1,10 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
-import QRCodeStyling from 'qrcode-styling';
+import QRCodeStyling from 'qr-code-styling'; // CORRIGIDO
 import html2canvas from 'html2canvas';
 
-// Componente de Análise de Conteúdo (Parse) - Sem mudanças
+// Componente de Análise de Conteúdo (Parse)
 const parseQrContent = (content) => {
   if (content.startsWith('WIFI:')) {
     const data = {};
@@ -31,7 +31,7 @@ const parseQrContent = (content) => {
   }
 };
 
-// Componente de Detalhes do Conteúdo - Sem mudanças
+// Componente de Detalhes do Conteúdo
 const ContentDetails = ({ content }) => {
   const { type, details } = parseQrContent(content);
   const Title = ({ text }) => <h3 className="detail-title">{text}</h3>;

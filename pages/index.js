@@ -62,6 +62,7 @@ export default function Home() {
     
     // Codifica o conteúdo final e redireciona
     const encodedContent = encodeURIComponent(content);
+    // Redireciona para a rota padrão de personalização
     router.push(`/${encodedContent}`);
   };
 
