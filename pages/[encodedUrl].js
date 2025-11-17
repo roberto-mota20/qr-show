@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
@@ -13,6 +13,7 @@ const DOT_STYLES = [
   { id: 'classy-rounded', label: 'Elegante (Curvo)' },
   { id: 'extra-rounded', label: 'Extra Curvo' },
 ];
+
 const CORNER_STYLES = [
   { id: 'square', label: 'Quadrado' },
   { id: 'rounded', label: 'Redondo' },
@@ -78,50 +79,62 @@ const ContentDetails = ({ content }) => {
   return ( <div className="content-details-box"> <p className="type-badge">Tipo: {type}</p> {detailContent} </div> );
 };
 
+
 // --- PÁGINA PRINCIPAL DO QR CODE ---
 export default function QrCodePage() {
   const router = useRouter();
   const { encodedUrl } = router.query;
   const [decodedContent, setDecodedContent] = useState('');
   
+  // Ref para o contêiner do QR Code
   const ref = useRef(null);
+  // Instância do QR Code
   const [qrInstance, setQrInstance] = useState(null);
 
   // --- Estados de Personalização ---
   const [logo, setLogo] = useState(null);
-  const [dotsColor, setDotsColor] = useState('#000000'); // Padrão Preto
-  const [bgColor, setBgColor] = useState('#ffffff'); 
-  const [dotsStyle, setDotsStyle] = useState('square'); // Padrão Quadrado
-  const [cornerStyle, setCornerStyle] = useState('square'); // Padrão Quadrado
-
-  // --- CORREÇÃO: Menus iniciam fechados ---
+  const [dotsColor, setDotsColor] = useState('#000000'); // Padrão: Preto Puro
+  const [bgColor, setBgColor] = useState('#ffffff'); // Padrão: Branco Puro
+  const [dotsStyle, setDotsStyle] = useState('square'); // Padrão: Quadrado
+  const [cornerStyle, setCornerStyle] = useState('square'); // Padrão: Quadrado
+  
+  // Estado para o Accordion "Inteligente"
   const [openAccordion, setOpenAccordion] = useState(null); // 'null' significa todos fechados
 
   // Função para controlar o accordion
   const handleAccordion = (id) => {
-    // Se clicar no que já está aberto, fecha. Senão, abre o novo.
+    // Se o ID clicado já está aberto, fecha ele. Senão, abre o ID clicado.
     setOpenAccordion(prev => prev === id ? null : id);
   };
 
-  // Memoiza as opções de QR Code
-  const options = useMemo(() => ({
+  // Memoiza as opções de QR Code para evitar recriação desnecessária
+  const options = {
     width: 256,
     height: 256,
-    type: 'canvas', 
+    type: 'canvas', // Canvas é melhor para download e logo
     data: decodedContent,
     image: logo,
-    dotsOptions: { color: dotsColor, type: dotsStyle },
-    backgroundOptions: { color: bgColor },
-    cornersSquareOptions: { color: dotsColor, type: cornerStyle },
+    dotsOptions: {
+      color: dotsColor,
+      type: dotsStyle
+    },
+    backgroundOptions: {
+      color: bgColor,
+    },
+    cornersSquareOptions: {
+      color: dotsColor, // Cor dos cantos segue a cor dos pontos
+      type: cornerStyle
+    },
     imageOptions: {
       crossOrigin: 'anonymous',
       margin: 4,
       imageSize: 0.3,
     },
     qrOptions: {
-      errorCorrectionLevel: logo ? 'H' : 'M', 
+      // Aumenta a correção de erro para 'H' (High) se houver um logo
+      errorCorrectionLevel: logo ? 'H' : 'M'
     }
-  }), [decodedContent, logo, dotsColor, bgColor, dotsStyle, cornerStyle]);
+  };
 
   // 1. Inicializa a instância do QR Code
   useEffect(() => {
@@ -129,28 +142,33 @@ export default function QrCodePage() {
       const qr = new QRCodeStyling(options);
       setQrInstance(qr);
     }
-  }, [qrInstance, options]); 
+  }, [qrInstance, options]); // Recria se as opções mudarem (raro)
 
   // 2. Anexa o QR Code ao DOM e atualiza
   useEffect(() => {
-    if (encodedUrl && qrInstance) {
-        try {
-            const content = decodeURIComponent(encodedUrl);
-            setDecodedContent(content);
-            
-            qrInstance.update(options);
-
-            if (ref.current && ref.current.children.length === 0) {
-                qrInstance.append(ref.current);
-            }
-        } catch (e) {
-            console.error("URL inválida:", e);
+    if (encodedUrl) {
+      try {
+        const content = decodeURIComponent(encodedUrl);
+        setDecodedContent(content);
+        
+        if (qrInstance) {
+          if (ref.current) {
+            // Limpa o contêiner antes de anexar
+            ref.current.innerHTML = '';
+            qrInstance.append(ref.current);
+          }
+          // Atualiza a instância com os dados e opções mais recentes
+          qrInstance.update(options);
         }
+      } catch (e) {
+        console.error("URL inválida:", e);
+      }
     }
-  }, [encodedUrl, qrInstance, options]);
+  }, [encodedUrl, qrInstance, options]); // Roda quando a URL ou as opções mudam
 
 
   // --- Funções de Manipulação ---
+
   const onLogoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -161,12 +179,17 @@ export default function QrCodePage() {
     reader.readAsDataURL(file);
   };
 
+  // Função de Download (com padding)
   const onDownload = (e) => {
-    const container = document.getElementById('qr-container-download'); 
+    // Previne o comportamento padrão (caso esteja em um form)
+    e.preventDefault(); 
+    
+    const container = document.getElementById('qr-container-download'); // O contêiner com padding
     if (!container) return;
+
     html2canvas(container, {
-      backgroundColor: null, 
-      useCORS: true 
+      backgroundColor: null, // Mantém fundo transparente se houver
+      useCORS: true // Para a logo
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = 'kasper-labs-qrcode.png';
@@ -176,17 +199,17 @@ export default function QrCodePage() {
   };
 
   // --- Componente Seletor de Chip ---
-  const StyleChipSelector = ({ title, options, current, onChange }) => (
-    <div className="accordion-content">
+  const StyleSelector = ({ title, options, selectedValue, onSelect }) => (
+    <div className="style-group">
       <label>{title}</label>
       <div className="style-chip-selector">
-        {options.map(option => (
+        {options.map((opt) => (
           <button
-            key={option.id}
-            className={`style-chip ${current === option.id ? 'active' : ''}`}
-            onClick={() => onChange(option.id)}
+            key={opt.id}
+            className={`style-chip ${selectedValue === opt.id ? 'active' : ''}`}
+            onClick={() => onSelect(opt.id)}
           >
-            {option.label}
+            {opt.label}
           </button>
         ))}
       </div>
@@ -203,7 +226,7 @@ export default function QrCodePage() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {/* --- CORREÇÃO: Reintroduzindo o Grid de Layout --- */}
+      {/* CORREÇÃO: Grid de Layout (Desktop) */}
       <div className="main-layout-grid">
         
         {/* --- COLUNA ESQUERDA (VISUAL) --- */}
@@ -222,7 +245,9 @@ export default function QrCodePage() {
         )}
 
         {/* --- COLUNA DIREITA (CONTROLES) --- */}
-        <div className="right-column-wrapper">
+        {/* CORREÇÃO: Botões agora estão DENTRO desta div */}
+        <div className="right-column-wrapper"> 
+          
           {/* --- NOVO PAINEL DE PERSONALIZAÇÃO (ACCORDION) --- */}
           <div className="personalization-panel">
             
@@ -263,26 +288,32 @@ export default function QrCodePage() {
               <summary onClick={(e) => { e.preventDefault(); handleAccordion('pontos'); }}>
                 Estilo dos Pontos
               </summary>
-              <StyleChipSelector
-                options={DOT_STYLES}
-                current={dotsStyle}
-                onChange={setDotsStyle}
-              />
+              <div className="accordion-content">
+                <StyleSelector
+                  title=""
+                  options={DOT_STYLES}
+                  selectedValue={dotsStyle}
+                  onSelect={setDotsStyle}
+                />
+              </div>
             </details>
-            
+
             {/* Estilo dos Cantos */}
             <details open={openAccordion === 'cantos'}>
               <summary onClick={(e) => { e.preventDefault(); handleAccordion('cantos'); }}>
                 Estilo dos Cantos
               </summary>
-              <StyleChipSelector
-                options={CORNER_STYLES}
-                current={cornerStyle}
-                onChange={setCornerStyle}
-              />
+              <div className="accordion-content">
+                <StyleSelector
+                  title=""
+                  options={CORNER_STYLES}
+                  selectedValue={cornerStyle}
+                  onSelect={setCornerStyle}
+                />
+              </div>
             </details>
 
-            {/* Logo */}
+            {/* Logo (Centro) */}
             <details open={openAccordion === 'logo'}>
               <summary onClick={(e) => { e.preventDefault(); handleAccordion('logo'); }}>
                 Logo (Centro)
@@ -301,15 +332,15 @@ export default function QrCodePage() {
                     />
                   </div>
                   {logo && (
-                    <button onClick={() => setLogo(null)} className="remove-logo-btn" style={{flex: 0.5, alignSelf: 'center'}}>
-                      Remover
+                    <button onClick={() => setLogo(null)} className="style-chip active" style={{borderColor: '#ff453a', color: '#ff453a', background: '#000'}}>
+                      Remover Logo
                     </button>
                   )}
                 </div>
               </div>
             </details>
 
-          </div>
+          </div> {/* Fim do personalization-panel */}
 
           {/* Botões de Ação */}
           <div className="action-buttons">
@@ -320,8 +351,15 @@ export default function QrCodePage() {
               Gerar outro QR Code
             </a>
           </div>
+
         </div> {/* Fim da right-column-wrapper */}
       </div> {/* Fim da main-layout-grid */}
+
+      {/* NOVO: Link para o Modo Simples */}
+      <p className="mode-toggle-link">
+        Para uma visualização limpa, acesse o <a href={`/s/${encodedUrl}`}>modo simplificado</a>.
+      </p>
+
     </div>
   );
 }

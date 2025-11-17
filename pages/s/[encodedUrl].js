@@ -64,7 +64,7 @@ export default function SimpleQrCodePage() {
   }, [encodedUrl, qrInstance]);
 
   return (
-    <div className="container simple-mode">
+    <div className="container">
       <Head>
         <title>Gerador Qr | Kasper-Labs</title>
       </Head>
@@ -74,11 +74,7 @@ export default function SimpleQrCodePage() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {/* CORREÇÃO: Layout "Quadrado Estendido"
-        O contêiner principal tem o 'border-radius'.
-        A 'qr-square-part' tem o padding do "quadradinho".
-        O 'simple-payload' tem o padding da "extensão".
-      */}
+      {/* Layout "Quadrado Estendido" */}
       <div className="qr-container-simple">
         <div className="qr-square-part">
           <div ref={ref} />
@@ -88,6 +84,10 @@ export default function SimpleQrCodePage() {
         </div>
       </div>
       
+      {/* NOVO: Link para o Modo Completo */}
+      <p className="mode-toggle-link">
+        Você está no modo simplificado. Para editar, acesse o <a href={`/${encodedUrl}`}>modo completo</a>.
+      </p>
     </div>
   );
 }
