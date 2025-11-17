@@ -512,15 +512,12 @@ a:hover {
 
 
 /* --- ESTILOS DO MODO SIMPLES (/s/...) --- */
-
-/* CORREÇÃO: Layout "Quadrado Estendido" */
+/* (ESTA SEÇÃO ESTÁ PERFEITA, NÃO MEXER) */
 .qr-container-simple {
   background-color: #ffffff;
   border-radius: 12px; /* Borda arredondada */
   margin-top: 1rem;
   
-  /* CORREÇÃO: Removido o max-width para voltar ao tamanho original */
-  /* max-width: 400px; */
   width: auto; /* Deixa o conteúdo definir a largura */
   margin-left: auto;
   margin-right: auto;

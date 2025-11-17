@@ -59,9 +59,9 @@ export default function Home() {
       return;
     }
     
-    // CORREÇÃO 404: Redireciona para a URL "crua" (ex: /https://google.com)
-    // A rota [...slug].js vai capturar isso.
-    router.push(`/${content}`);
+    // CORREÇÃO 404: Codifica o conteúdo para que a URL seja segura
+    const encodedContent = encodeURIComponent(content);
+    router.push(`/${encodedContent}`);
   };
 
   // Renderização dos Formulários

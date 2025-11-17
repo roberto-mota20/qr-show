@@ -85,7 +85,7 @@ const ContentDetails = ({ content }) => {
 // --- PÁGINA PRINCIPAL DO QR CODE ---
 export default function QrCodePage() {
   const router = useRouter();
-  const { slug } = router.query; // CORREÇÃO 404: Usa o 'slug'
+  const { encodedUrl } = router.query; // CORREÇÃO 404: Usa 'encodedUrl'
   const [decodedContent, setDecodedContent] = useState('');
   
   // Ref para o contêiner do QR Code
@@ -148,10 +148,10 @@ export default function QrCodePage() {
 
   // 2. Anexa o QR Code ao DOM e atualiza
   useEffect(() => {
-    // CORREÇÃO 404: Atualiza o QR Code quando o 'slug' mudar
-    if (slug) {
+    // CORREÇÃO 404: Atualiza o QR Code quando o 'encodedUrl' mudar
+    if (encodedUrl) {
       try {
-        const content = Array.isArray(slug) ? slug.join('/') : slug;
+        const content = decodeURIComponent(encodedUrl);
         setDecodedContent(content);
         
         if (qrInstance) {
@@ -167,7 +167,7 @@ export default function QrCodePage() {
         console.error("URL inválida:", e);
       }
     }
-  }, [slug, qrInstance, options]); // Roda quando o 'slug' ou as opções mudam
+  }, [encodedUrl, qrInstance, options]); // Roda quando o 'encodedUrl' ou as opções mudam
 
 
   // --- Funções de Manipulação ---
@@ -358,9 +358,9 @@ export default function QrCodePage() {
         </div> {/* Fim da right-column-wrapper */}
       </div> {/* Fim da main-layout-grid */}
 
-      {/* NOVO: Link para o Modo Simples (usa a URL decodificada) */}
+      {/* NOVO: Link para o Modo Simples (usa a URL já codificada) */}
       <p className="mode-toggle-link">
-        Para uma visualização limpa, acesse o <a href={`/s/${decodedContent}`}>modo simplificado</a>.
+        Para uma visualização limpa, acesse o <a href={`/s/${encodedUrl}`}>modo simplificado</a>.
       </p>
 
     </div>

@@ -27,7 +27,7 @@ const qrOptions = {
 
 export default function SimpleQrCodePage() {
   const router = useRouter();
-  const { slug } = router.query; // CORREÇÃO 404: Usa o 'slug'
+  const { encodedUrl } = router.query; // CORREÇÃO 404: Usa 'encodedUrl'
   
   const [decodedContent, setDecodedContent] = useState('');
   const [qrInstance, setQrInstance] = useState(null);
@@ -52,10 +52,9 @@ export default function SimpleQrCodePage() {
 
   useEffect(() => {
     // CORREÇÃO 404: Atualiza o QR Code quando a URL mudar
-    if (slug && qrInstance) {
+    if (encodedUrl && qrInstance) {
       try {
-        // Junta as partes do slug (ex: ['https:', 'google.com'] => 'https:/google.com')
-        const content = Array.isArray(slug) ? slug.join('/') : slug;
+        const content = decodeURIComponent(encodedUrl); // Decodifica a URL
         setDecodedContent(content);
         qrInstance.update({ data: content });
       } catch (e) {
@@ -63,7 +62,7 @@ export default function SimpleQrCodePage() {
         setDecodedContent("URL inválida ou malformada.");
       }
     }
-  }, [slug, qrInstance]);
+  }, [encodedUrl, qrInstance]);
 
   return (
     <div className="container">
@@ -76,7 +75,7 @@ export default function SimpleQrCodePage() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {/* Layout "Quadrado Estendido" */}
+      {/* Layout "Quadrado Estendido" (PERFEITO, não mexer) */}
       <div className="qr-container-simple">
         <div className="qr-square-part">
           <div ref={ref} />
@@ -86,9 +85,9 @@ export default function SimpleQrCodePage() {
         </div>
       </div>
       
-      {/* NOVO: Link para o Modo Completo (usa a URL decodificada) */}
+      {/* NOVO: Link para o Modo Completo (usa a URL já codificada) */}
       <p className="mode-toggle-link">
-        Você está no modo simplificado. Para editar, acesse o <a href={`/${decodedContent}`}>modo completo</a>.
+        Você está no modo simplificado. Para editar, acesse o <a href={`/${encodedUrl}`}>modo completo</a>.
       </p>
     </div>
   );
