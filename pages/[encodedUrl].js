@@ -85,7 +85,7 @@ const ContentDetails = ({ content }) => {
 // --- PÁGINA PRINCIPAL DO QR CODE ---
 export default function QrCodePage() {
   const router = useRouter();
-  const { encodedUrl } = router.query; // CORREÇÃO 404: Usa 'encodedUrl'
+  const { encodedUrl } = router.query; // Rota /s/
   const [decodedContent, setDecodedContent] = useState('');
   
   // Ref para o contêiner do QR Code
@@ -148,7 +148,7 @@ export default function QrCodePage() {
 
   // 2. Anexa o QR Code ao DOM e atualiza
   useEffect(() => {
-    // CORREÇÃO 404: Atualiza o QR Code quando o 'encodedUrl' mudar
+    // Atualiza o QR Code quando o 'encodedUrl' mudar
     if (encodedUrl) {
       try {
         const content = decodeURIComponent(encodedUrl);
@@ -229,7 +229,7 @@ export default function QrCodePage() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {/* CORREÇÃO: Grid de Layout (Desktop) */}
+      {/* Grid de Layout (Desktop) */}
       <div className="main-layout-grid">
         
         {/* --- COLUNA ESQUERDA (VISUAL) --- */}
@@ -248,7 +248,7 @@ export default function QrCodePage() {
         )}
 
         {/* --- COLUNA DIREITA (CONTROLES) --- */}
-        {/* CORREÇÃO: Botões agora estão DENTRO desta div */}
+        {/* Botões agora estão DENTRO desta div */}
         <div className="right-column-wrapper"> 
           
           {/* --- NOVO PAINEL DE PERSONALIZAÇÃO (ACCORDION) --- */}
@@ -358,9 +358,9 @@ export default function QrCodePage() {
         </div> {/* Fim da right-column-wrapper */}
       </div> {/* Fim da main-layout-grid */}
 
-      {/* NOVO: Link para o Modo Simples (usa a URL já codificada) */}
+      {/* CORREÇÃO DE ROTA: Link para o Modo Simples (agora em /) */}
       <p className="mode-toggle-link">
-        Para uma visualização limpa, acesse o <a href={`/s/${encodedUrl}`}>modo simplificado</a>.
+        Para uma visualização limpa, acesse o <a href={`/${encodedUrl}`}>modo simplificado</a>.
       </p>
 
     </div>

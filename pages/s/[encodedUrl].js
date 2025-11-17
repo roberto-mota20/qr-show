@@ -27,7 +27,7 @@ const qrOptions = {
 
 export default function SimpleQrCodePage() {
   const router = useRouter();
-  const { encodedUrl } = router.query; // CORREÇÃO 404: Usa 'encodedUrl'
+  const { encodedUrl } = router.query; // Rota padrão
   
   const [decodedContent, setDecodedContent] = useState('');
   const [qrInstance, setQrInstance] = useState(null);
@@ -51,7 +51,7 @@ export default function SimpleQrCodePage() {
   }, [qrInstance]);
 
   useEffect(() => {
-    // CORREÇÃO 404: Atualiza o QR Code quando a URL mudar
+    // Atualiza o QR Code quando a URL mudar
     if (encodedUrl && qrInstance) {
       try {
         const content = decodeURIComponent(encodedUrl); // Decodifica a URL
@@ -85,9 +85,9 @@ export default function SimpleQrCodePage() {
         </div>
       </div>
       
-      {/* NOVO: Link para o Modo Completo (usa a URL já codificada) */}
+      {/* CORREÇÃO DE ROTA: Link para o Modo Completo (agora em /s/) */}
       <p className="mode-toggle-link">
-        Você está no modo simplificado. Para editar, acesse o <a href={`/${encodedUrl}`}>modo completo</a>.
+        Você está no modo simplificado. Para editar, acesse o <a href={`/s/${encodedUrl}`}>modo completo</a>.
       </p>
     </div>
   );

@@ -59,9 +59,9 @@ export default function Home() {
       return;
     }
     
-    // CORREÇÃO 404: Codifica o conteúdo para que a URL seja segura
+    // CORREÇÃO DE ROTA: Codifica o conteúdo e envia para a página de admin
     const encodedContent = encodeURIComponent(content);
-    router.push(`/${encodedContent}`);
+    router.push(`/s/${encodedContent}`); // Manda para o Modo Completo
   };
 
   // Renderização dos Formulários
