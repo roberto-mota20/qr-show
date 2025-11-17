@@ -203,33 +203,33 @@ export default function QrCodePage() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {/* --- CORREÇÃO: Layout Invertido --- */}
-      
-      {/* --- COLUNA VISUAL (QR E DETALHES LADO A LADO) --- */}
-      {decodedContent ? (
-        <div className="qr-visual-section">
-          {/* O QR Code será montado aqui */}
-          <div id="qr-container-download" className="qr-container">
-            <div ref={ref} />
+      {/* --- CORREÇÃO: Reintroduzindo o Grid de Layout --- */}
+      <div className="main-layout-grid">
+        
+        {/* --- COLUNA ESQUERDA (VISUAL) --- */}
+        {decodedContent ? (
+          <div className="qr-visual-section">
+            {/* O QR Code será montado aqui */}
+            <div id="qr-container-download" className="qr-container">
+              <div ref={ref} />
+            </div>
+
+            {/* Componente para exibir os detalhes do conteúdo */}
+            <ContentDetails content={decodedContent} />
           </div>
+        ) : (
+          <p>Gerando seu QR Code...</p>
+        )}
 
-          {/* Componente para exibir os detalhes do conteúdo */}
-          <ContentDetails content={decodedContent} />
-        </div>
-      ) : (
-        <p>Gerando seu QR Code...</p>
-      )}
+        {/* --- COLUNA DIREITA (CONTROLES) --- */}
+        <div className="right-column-wrapper">
+          {/* --- NOVO PAINEL DE PERSONALIZAÇÃO (ACCORDION) --- */}
+          <div className="personalization-panel">
+            
+            {/* Título do Painel */}
+            <p className="panel-title">Personalizar QR Code</p>
 
-      {/* --- COLUNA DE CONTROLES (PAINEL E BOTÕES ABAIXO) --- */}
-      <div className="right-column-wrapper">
-        {/* --- NOVO PAINEL DE PERSONALIZAÇÃO (ACCORDION) --- */}
-        <div className="personalization-panel">
-          
-          {/* CORREÇÃO: Título do Painel */}
-          <p className="panel-title">Personalizar QR Code</p>
-
-          {/* Cores */}
-            <details open={openAccordion === 'cores'}>
+            {/* Cores */}
               <summary onClick={(e) => { e.preventDefault(); handleAccordion('cores'); }}>
                 Cores
               </summary>
@@ -319,7 +319,8 @@ export default function QrCodePage() {
               Gerar outro QR Code
             </a>
           </div>
-      </div> {/* Fim da right-column-wrapper */}
+        </div> {/* Fim da right-column-wrapper */}
+      </div> {/* Fim da main-layout-grid */}
     </div>
   );
 }
