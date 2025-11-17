@@ -230,6 +230,7 @@ export default function QrCodePage() {
             <p className="panel-title">Personalizar QR Code</p>
 
             {/* Cores */}
+            <details open={openAccordion === 'cores'}>
               <summary onClick={(e) => { e.preventDefault(); handleAccordion('cores'); }}>
                 Cores
               </summary>
