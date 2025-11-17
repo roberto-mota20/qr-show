@@ -54,16 +54,14 @@ export default function Home() {
     e.preventDefault();
     const content = formatContent();
     
-    // Simplificando a validação para Wi-Fi e E-mail (o input 'required' já ajuda)
     if (!content || (mode === 'wifi' && (!wifiData.ssid || !wifiData.security))) {
       console.error("Conteúdo vazio ou incompleto.");
       return;
     }
     
-    // Codifica o conteúdo final e redireciona
-    const encodedContent = encodeURIComponent(content);
-    // Redireciona para a rota padrão de personalização
-    router.push(`/${encodedContent}`);
+    // CORREÇÃO 404: Redireciona para a URL "crua" (ex: /https://google.com)
+    // A rota [...slug].js vai capturar isso.
+    router.push(`/${content}`);
   };
 
   // Renderização dos Formulários

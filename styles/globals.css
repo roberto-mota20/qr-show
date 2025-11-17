@@ -437,6 +437,7 @@ a:hover {
 .download-btn {
   background-color: #34C759; /* Verde (para download) */
   box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4);
+  white-space: nowrap; /* CORREÇÃO: Impede quebra de linha */
 }
 
 .download-btn:hover {
@@ -511,7 +512,6 @@ a:hover {
 
 
 /* --- ESTILOS DO MODO SIMPLES (/s/...) --- */
-/* CORREÇÃO: Removida a classe .container.simple-mode */
 
 /* CORREÇÃO: Layout "Quadrado Estendido" */
 .qr-container-simple {
@@ -519,18 +519,17 @@ a:hover {
   border-radius: 12px; /* Borda arredondada */
   margin-top: 1rem;
   
-  /* CORREÇÃO: O contêiner agora tem sua própria largura máxima */
-  max-width: 400px;
-  width: 100%; 
+  /* CORREÇÃO: Removido o max-width para voltar ao tamanho original */
+  /* max-width: 400px; */
+  width: auto; /* Deixa o conteúdo definir a largura */
   margin-left: auto;
   margin-right: auto;
 
-  min-width: calc(256px + 3rem); /* 256px + padding lateral */
+  min-width: calc(256px + 3rem); /* 256px + padding lateral (TAMANHO ANTERIOR) */
   box-sizing: border-box;
   overflow: hidden; /* Garante que os cantos arredondados funcionem */
-  display: flex; /* Flex-column */
+  display: inline-flex; /* Usa inline-flex para se ajustar ao conteúdo */
   flex-direction: column;
-  /* gap: 1.5rem; */ /* Removido o gap para unir as partes */
 }
 
 /* A parte do "quadradinho" com padding */

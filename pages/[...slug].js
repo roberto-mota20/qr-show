@@ -22,6 +22,8 @@ const CORNER_STYLES = [
 
 // Componente de Análise de Conteúdo (Parse)
 const parseQrContent = (content) => {
+  if (!content) return { type: 'Texto', details: { text: '' } }; // Guarda contra nulo
+  
   if (content.startsWith('WIFI:')) {
     const data = {};
     const parts = content.substring(5).slice(0, -2).split(';').map(p => p.trim());
@@ -83,7 +85,7 @@ const ContentDetails = ({ content }) => {
 // --- PÁGINA PRINCIPAL DO QR CODE ---
 export default function QrCodePage() {
   const router = useRouter();
-  const { encodedUrl } = router.query;
+  const { slug } = router.query; // CORREÇÃO 404: Usa o 'slug'
   const [decodedContent, setDecodedContent] = useState('');
   
   // Ref para o contêiner do QR Code
@@ -146,9 +148,10 @@ export default function QrCodePage() {
 
   // 2. Anexa o QR Code ao DOM e atualiza
   useEffect(() => {
-    if (encodedUrl) {
+    // CORREÇÃO 404: Atualiza o QR Code quando o 'slug' mudar
+    if (slug) {
       try {
-        const content = decodeURIComponent(encodedUrl);
+        const content = Array.isArray(slug) ? slug.join('/') : slug;
         setDecodedContent(content);
         
         if (qrInstance) {
@@ -158,13 +161,13 @@ export default function QrCodePage() {
             qrInstance.append(ref.current);
           }
           // Atualiza a instância com os dados e opções mais recentes
-          qrInstance.update(options);
+          qrInstance.update({ ...options, data: content });
         }
       } catch (e) {
         console.error("URL inválida:", e);
       }
     }
-  }, [encodedUrl, qrInstance, options]); // Roda quando a URL ou as opções mudam
+  }, [slug, qrInstance, options]); // Roda quando o 'slug' ou as opções mudam
 
 
   // --- Funções de Manipulação ---
@@ -355,9 +358,9 @@ export default function QrCodePage() {
         </div> {/* Fim da right-column-wrapper */}
       </div> {/* Fim da main-layout-grid */}
 
-      {/* NOVO: Link para o Modo Simples */}
+      {/* NOVO: Link para o Modo Simples (usa a URL decodificada) */}
       <p className="mode-toggle-link">
-        Para uma visualização limpa, acesse o <a href={`/s/${encodedUrl}`}>modo simplificado</a>.
+        Para uma visualização limpa, acesse o <a href={`/s/${decodedContent}`}>modo simplificado</a>.
       </p>
 
     </div>
