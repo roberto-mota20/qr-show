@@ -20,6 +20,7 @@ body {
   justify-content: center;
   align-items: center;
   text-align: center;
+  padding: 1rem 0; /* Adiciona padding para evitar corte em telas longas */
 }
 
 /* Estilo do Logo (baseado no verifica.html) */
@@ -163,17 +164,21 @@ body {
   }
 }
 
-/* Container do QR Code em si */
+/* Container do QR Code em si (usado para download) */
 .qr-container {
   background-color: #ffffff; /* Fundo branco para o QR code */
   padding: 1rem; /* CORREÇÃO: Padding diminuído */
   border-radius: 12px;
   box-shadow: 0 0 25px rgba(0, 122, 255, 0.5);
   display: inline-block;
-  /* Garante que o QR code tenha o mesmo tamanho que o painel de detalhes */
   min-width: 288px; /* CORREÇÃO: 256px do QR + 2rem (32px) de padding */
   box-sizing: border-box; /* Garante que o padding não quebre o min-width */
 }
+/* O qrcode-styling cria um canvas/svg, centralizamos ele */
+.qr-container div {
+  margin: 0 auto;
+}
+
 
 /* Detalhes do Conteúdo */
 .content-details-box {
@@ -264,4 +269,158 @@ a:hover {
   background-color: #007aff;
   color: #ffffff;
   text-decoration: none;
+}
+
+/* --- NOVOS ESTILOS DE PERSONALIZAÇÃO --- */
+.personalization-panel {
+  background-color: #1c1c1c;
+  border: 1px solid #007aff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  max-width: 800px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.panel-title {
+  font-family: 'Lexend', sans-serif;
+  font-weight: 700;
+  color: #007aff;
+  border-bottom: 1px solid #007aff;
+  padding-bottom: 0.5rem;
+  margin-top: 0;
+  text-align: left;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .control-group {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.control-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.control-item label {
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.control-item input[type="color"] {
+  width: 100%;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #007aff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.control-item select {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1rem;
+  padding: 0.5rem;
+  background-color: #000;
+  color: #fff;
+  border: 1px solid #007aff;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.control-item.file-upload input[type="file"] {
+  display: none; /* Esconde o input padrão */
+}
+
+.file-label {
+  font-family: 'Roboto Mono', monospace; 
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #007aff;
+  color: #ffffff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.file-label:hover {
+  background-color: #ffffff;
+  color: #007aff;
+}
+
+.remove-logo-btn {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+  background-color: transparent;
+  color: #ff453a; /* Vermelho (para remoção) */
+  border: 1px solid #ff453a;
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  align-items: center;
+}
+
+.download-btn {
+  background-color: #34C759; /* Verde (para download) */
+  box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4);
+}
+
+.download-btn:hover {
+  background-color: #ffffff;
+  color: #34C759;
+  box-shadow: 0 0 20px #34C759;
+}
+
+@media (min-width: 768px) {
+  .action-buttons {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+/* --- ESTILOS DO MODO SIMPLES (/s/...) --- */
+.container.simple-mode {
+  max-width: 400px;
+}
+
+.qr-container-simple {
+  background-color: #ffffff;
+  padding: 1rem;
+  border-radius: 12px;
+  display: inline-block;
+  margin-top: 1rem;
+}
+.qr-container-simple div {
+  margin: 0 auto;
+}
+
+.simple-payload {
+  font-family: 'Roboto Mono', monospace;
+  color: #cccccc;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  word-break: break-all; /* Quebra a URL para não estourar o layout */
 }
