@@ -1,5 +1,5 @@
 /* Importando as fontes da Kasper-Labs */
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@900&family=Roboto+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@900&family=Roboto+Mono:wght@400;700&display=swap');
 
 /* Aplicando as cores e fontes base */
 html,
@@ -26,7 +26,7 @@ body {
 .kasper-logo {
   font-family: 'Lexend', sans-serif;
   font-weight: 900;
-  font-size: 3.5rem; /* Aumentado para destaque */
+  font-size: 3.5rem; /* Tamanho padrão (Desktop) */
   color: #ffffff;
   margin-bottom: 2rem;
   line-height: 1.1;
@@ -35,14 +35,28 @@ body {
   overflow: hidden; 
 }
 
+/* CORREÇÃO: Mídia query para ajustar logo em telas pequenas */
+@media (max-width: 480px) {
+  .kasper-logo {
+    font-size: 2.5rem; /* Fonte menor no celular */
+    white-space: normal; /* Permite quebrar a linha se for extremo */
+  }
+}
+
 .kasper-logo .blue-text {
   color: #007aff; /* Azul Claro */
 }
 
 /* Estilo do Contêiner Principal */
 .container {
-  padding: 2rem;
+  padding: 1.5rem; /* Padding base para celular */
   max-width: 90vw; 
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem; /* Padding maior no desktop */
+  }
 }
 
 /* Estilo do Formulário */
@@ -133,7 +147,6 @@ body {
 }
 
 /* Estilos da Página de QR Code */
-/* CORREÇÃO: Layout flex para alinhar QR Code e Detalhes lado a lado em telas maiores */
 .qr-visual-section {
   display: flex;
   flex-direction: column; /* Padrão em telas pequenas */
@@ -153,12 +166,13 @@ body {
 /* Container do QR Code em si */
 .qr-container {
   background-color: #ffffff; /* Fundo branco para o QR code */
-  padding: 1.5rem;
+  padding: 1rem; /* CORREÇÃO: Padding diminuído */
   border-radius: 12px;
   box-shadow: 0 0 25px rgba(0, 122, 255, 0.5);
   display: inline-block;
   /* Garante que o QR code tenha o mesmo tamanho que o painel de detalhes */
-  min-width: 286px; /* 256px do QR + 30px de padding */
+  min-width: 288px; /* CORREÇÃO: 256px do QR + 2rem (32px) de padding */
+  box-sizing: border-box; /* Garante que o padding não quebre o min-width */
 }
 
 /* Detalhes do Conteúdo */
@@ -168,14 +182,15 @@ body {
   border-radius: 8px;
   width: 100%;
   max-width: 400px; /* Mantém um bom limite de largura */
-  min-width: 286px; /* CORREÇÃO: Garante o mesmo tamanho que o QR Code */
+  min-width: 288px; /* CORREÇÃO: Garante o mesmo tamanho que o QR Code */
   text-align: left;
   border: 1px solid #007aff;
+  box-sizing: border-box; /* Garante que o padding não quebre o min-width */
 }
 
 .type-badge {
   font-family: 'Lexend', sans-serif;
-  font-weight: 900;
+  font-weight: 700; /* CORREÇÃO: Peso diminuído de 900 */
   color: #007aff;
   margin-top: 0;
   margin-bottom: 1rem;
@@ -186,7 +201,7 @@ body {
 
 .detail-title {
     font-family: 'Lexend', sans-serif;
-    font-weight: 700;
+    font-weight: 400; /* CORREÇÃO: Peso diminuído de 700 */
     font-size: 1rem;
     color: #ffffff;
     margin-top: 0.5rem;

@@ -136,10 +136,11 @@ export default function QrCodePage() {
   return (
     <div className="container">
       <Head>
-        <title>Seu QR Code</title>
+        <title>Gerador Qr | Kasper-Labs</title>
       </Head>
 
-      <h1 className="kasper-logo" style={{ fontSize: '2.5rem', marginBottom: '1.5rem' }}>
+      {/* A LOGO AGORA USA A CLASSE RESPONSIVA, SEM ESTILO INLINE */}
+      <h1 className="kasper-logo">
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       

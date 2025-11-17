@@ -160,7 +160,7 @@ export default function Home() {
   return (
     <div className="container">
       <Head>
-        <title>Kasper-Labs QR - Gerador Multiuso</title>
+        <title>Gerador Qr | Kasper-Labs</title>
         <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, Wi-Fi, Texto e E-mail." />
       </Head>
 
