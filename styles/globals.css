@@ -111,6 +111,7 @@ body {
   box-shadow: 0 4px 15px rgba(0, 122, 255, 0.4);
   text-decoration: none; 
   display: inline-block; 
+  white-space: nowrap; /* CORREÇÃO: Impede que o botão quebre em duas linhas */
 }
 
 .submit-button:hover {
@@ -153,14 +154,24 @@ body {
 
 /* Estilos da Página de QR Code */
 
-/* Seção visual (QR e Detalhes) */
+/* CORREÇÃO: Layout de Coluna Única. Seção visual centralizada */
 .qr-visual-section {
   display: flex;
-  flex-direction: column; 
-  align-items: center; 
+  flex-direction: column; /* Padrão mobile: coluna */
+  align-items: center; /* Centraliza no mobile */
   gap: 2rem; 
   width: 100%;
+  max-width: 1000px; /* Aumenta a largura máxima para o modo lado-a-lado */
   margin: 0 auto 2rem auto; /* Centraliza a seção e dá espaço abaixo */
+}
+
+/* CORREÇÃO: Lado-a-lado no desktop */
+@media (min-width: 768px) {
+  .qr-visual-section {
+    flex-direction: row; /* Lado-a-lado no desktop */
+    align-items: flex-start; /* Alinha o topo */
+    justify-content: center; /* Centraliza os dois blocos */
+  }
 }
 
 
@@ -272,6 +283,29 @@ a:hover {
 }
 
 /* --- NOVOS ESTILOS DE PERSONALIZAÇÃO (ACCORDION) --- */
+
+/* CORREÇÃO: Coluna de Controles (centralizada) */
+.right-column-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 800px; /* Limita a largura do painel e botões */
+  margin: 0 auto; /* Centraliza a coluna de controles */
+}
+
+/* CORREÇÃO: Título do Painel */
+.panel-title {
+  font-family: 'Lexend', sans-serif;
+  font-weight: 700; 
+  color: #007aff;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #007aff;
+  padding-bottom: 5px;
+  margin: 1.5rem 1.5rem 1rem 1.5rem; /* Margens para o título */
+  text-align: left;
+}
+
 .personalization-panel {
   background-color: #1c1c1c;
   border: 1px solid #007aff;
@@ -398,7 +432,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin: 2rem auto 0 auto; /* Centraliza os botões e dá espaço */
+  margin: 0 auto; /* Centraliza os botões */
   align-items: center;
   max-width: 800px;
   width: 100%;
@@ -422,53 +456,28 @@ a:hover {
   }
 }
 
-/* --- CORREÇÃO: Reintroduzindo o Grid de Layout --- */
+/* --- CORREÇÃO: Removido o Grid de Desktop --- */
 .main-layout-grid {
-  display: flex; /* Padrão mobile: coluna */
-  flex-direction: column;
-  gap: 2rem;
-  width: 100%;
-  align-items: center; /* Centraliza no mobile */
-}
-
-.right-column-wrapper {
+  /* O grid foi removido, agora é um layout de coluna simples */
   display: flex;
   flex-direction: column;
   gap: 2rem;
   width: 100%;
-  max-width: 800px; /* Limita a largura no mobile */
+  align-items: center; /* Centraliza tudo */
 }
 
-@media (min-width: 1024px) { /* Em telas grandes (desktop) */
+@media (min-width: 1024px) { 
   .main-layout-grid {
-    display: grid;
-    /* CORREÇÃO: Coluna da esquerda flexível, Coluna da direita FIXA */
-    grid-template-columns: 1fr 450px; 
-    align-items: flex-start; /* Alinha os topos */
-    gap: 2.5rem;
-    max-width: 1400px;
+     /* Mantém a coluna simples, mas permite mais espaço */
+     max-width: 1400px;
   }
 
   .qr-visual-section {
-    /* No grid, faz a coluna visual ficar vertical e alinhada à direita */
-    flex-direction: column; 
-    align-items: flex-end; /* Alinha o conteúdo à direita */
-    margin: 0;
-  }
-
-  .right-column-wrapper {
-    width: 450px; /* Largura FIXA da coluna da direita */
-    max-width: 450px;
-  }
-
-  .personalization-panel {
-    max-width: 100%; /* Ocupa 100% da coluna direita */
-    margin: 0;
-  }
-
-  .action-buttons {
-    max-width: 100%;
-    margin: 0;
+     /* Garante que o QR e Detalhes fiquem lado a lado */
+     flex-direction: row; 
+     align-items: flex-start; 
+     justify-content: center;
+     gap: 2.5rem;
   }
 }
 
@@ -476,6 +485,11 @@ a:hover {
 /* --- ESTILOS DO MODO SIMPLES (/s/...) --- */
 .container.simple-mode {
   max-width: 400px;
+}
+
+/* CORREÇÃO: Força a logo a ser menor no modo simples */
+.simple-mode .kasper-logo {
+  font-size: 2.5rem;
 }
 
 /* CORREÇÃO: Layout "Quadrado Estendido" */
@@ -488,7 +502,7 @@ a:hover {
   overflow: hidden; /* Garante que os cantos arredondados funcionem */
   display: flex; /* Flex-column */
   flex-direction: column;
-  gap: 1.5rem; /* CORREÇÃO: Adiciona espaço entre o QR e o Payload */
+  gap: 1.5rem; /* Adiciona espaço entre o QR e o Payload */
 }
 
 /* A parte do "quadradinho" com padding */
