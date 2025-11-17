@@ -74,12 +74,15 @@ export default function SimpleQrCodePage() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
-      {/* CORREÇÃO: O contêiner agora é um flex-column.
-        O QR Code é montado no 'ref' e o payload é um item separado
-        abaixo dele, mas dentro do mesmo contêiner branco.
+      {/* CORREÇÃO: Layout "Quadrado Estendido"
+        O contêiner principal tem o 'border-radius'.
+        A 'qr-square-part' tem o padding do "quadradinho".
+        O 'simple-payload' tem o padding da "extensão".
       */}
       <div className="qr-container-simple">
-        <div ref={ref} />
+        <div className="qr-square-part">
+          <div ref={ref} />
+        </div>
         <div className="simple-payload">
             {decodedContent}
         </div>
