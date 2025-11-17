@@ -21,7 +21,7 @@ const qrOptions = {
   },
   imageOptions: {
     crossOrigin: 'anonymous',
-    margin: 0 // Removendo margin
+    margin: 4 // CORREÇÃO: Adiciona uma pequena margem interna
   }
 };
 
@@ -43,7 +43,9 @@ export default function SimpleQrCodePage() {
   useEffect(() => {
     // Anexa o QR Code ao DOM
     if (qrInstance && ref.current) {
-      qrInstance.append(ref.current);
+        // Limpa o contêiner antes de anexar
+        ref.current.innerHTML = '';
+        qrInstance.append(ref.current);
     }
   }, [qrInstance]);
 
@@ -67,13 +69,14 @@ export default function SimpleQrCodePage() {
         <title>Gerador Qr | Kasper-Labs</title>
       </Head>
 
-      {/* CORREÇÃO: Logo responsiva */}
+      {/* CORREÇÃO: Logo responsiva (classe do globals.css) */}
       <h1 className="kasper-logo">
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
       
       {/* O QR Code será montado aqui */}
-      <div className="qr-container-simple" ref={ref} >
+      <div className="qr-container-simple">
+        <div ref={ref} />
         {/* Payload que ficará SOBRE a área branca (estilizado no CSS) */}
         <div className="simple-payload">
             {decodedContent}

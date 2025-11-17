@@ -4,12 +4,24 @@ import Head from 'next/head';
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
 
-// Tipos de estilos disponíveis para preview
-const DOT_STYLES = ['rounded', 'dots', 'classy', 'classy-rounded', 'square', 'extra-rounded'];
-const CORNER_STYLES = ['rounded', 'square', 'dot'];
+// Tipos de estilos disponíveis para seleção
+const DOT_STYLES = [
+  { id: 'square', label: 'Quadrado' },
+  { id: 'rounded', label: 'Redondo' },
+  { id: 'dots', label: 'Pontos' },
+  { id: 'classy', label: 'Elegante' },
+  { id: 'classy-rounded', label: 'Elegante (Curvo)' },
+  { id: 'extra-rounded', label: 'Extra Curvo' },
+];
+const CORNER_STYLES = [
+  { id: 'square', label: 'Quadrado' },
+  { id: 'rounded', label: 'Redondo' },
+  { id: 'dot', label: 'Ponto' },
+];
 
 // Componente de Análise de Conteúdo (Parse) - Sem mudanças
 const parseQrContent = (content) => {
+// ... (código de parse inalterado) ...
   if (content.startsWith('WIFI:')) {
     const data = {};
     const parts = content.substring(5).slice(0, -2).split(';').map(p => p.trim());
@@ -37,6 +49,7 @@ const parseQrContent = (content) => {
 
 // Componente de Detalhes do Conteúdo - Sem mudanças
 const ContentDetails = ({ content }) => {
+// ... (código de detalhes inalterado) ...
   const { type, details } = parseQrContent(content);
   const Title = ({ text }) => <h3 className="detail-title">{text}</h3>;
   const DetailItem = ({ label, value }) => (
@@ -78,12 +91,12 @@ export default function QrCodePage() {
 
   // --- Estados de Personalização ---
   const [logo, setLogo] = useState(null);
-  const [dotsColor, setDotsColor] = useState('#007aff'); // CORREÇÃO: Azul Padrão
+  const [dotsColor, setDotsColor] = useState('#000000'); // CORREÇÃO: Padrão Preto
   const [bgColor, setBgColor] = useState('#ffffff'); 
-  const [dotsStyle, setDotsStyle] = useState('square'); // CORREÇÃO: Quadrado Padrão
-  const [cornerStyle, setCornerStyle] = useState('square'); // CORREÇÃO: Quadrado Padrão
+  const [dotsStyle, setDotsStyle] = useState('square'); // Padrão Quadrado
+  const [cornerStyle, setCornerStyle] = useState('square'); // Padrão Quadrado
 
-  // Memoiza as opções de QR Code para garantir que o objeto seja estável
+  // Memoiza as opções de QR Code
   const options = useMemo(() => ({
     width: 256,
     height: 256,
@@ -99,35 +112,29 @@ export default function QrCodePage() {
       imageSize: 0.3,
     },
     qrOptions: {
-      errorCorrectionLevel: logo ? 'H' : 'M', // Aumenta a correção se houver logo
+      errorCorrectionLevel: logo ? 'H' : 'M', 
     }
   }), [decodedContent, logo, dotsColor, bgColor, dotsStyle, cornerStyle]);
 
   // 1. Inicializa a instância do QR Code
   useEffect(() => {
-    // CORREÇÃO CRÍTICA: O Next.js renderiza o módulo no servidor antes do 'window' existir.
-    // Inicializamos a instância apenas no lado do cliente (browser).
     if (typeof window !== 'undefined' && !qrInstance) {
       const qr = new QRCodeStyling(options);
       setQrInstance(qr);
     }
   }, [qrInstance, options]); 
 
-  // 2. Anexa o QR Code ao DOM e atualiza quando as opções ou conteúdo mudam
+  // 2. Anexa o QR Code ao DOM e atualiza
   useEffect(() => {
     if (encodedUrl && qrInstance) {
         try {
             const content = decodeURIComponent(encodedUrl);
             setDecodedContent(content);
             
-            // Atualiza o QR Code com as opções mais recentes
             qrInstance.update(options);
 
-            if (ref.current) {
-                // Anexa o QR Code ao DOM se ainda não tiver sido anexado
-                if (ref.current.children.length === 0) {
-                    qrInstance.append(ref.current);
-                }
+            if (ref.current && ref.current.children.length === 0) {
+                qrInstance.append(ref.current);
             }
         } catch (e) {
             console.error("URL inválida:", e);
@@ -137,7 +144,6 @@ export default function QrCodePage() {
 
 
   // --- Funções de Manipulação ---
-
   const onLogoUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -151,7 +157,6 @@ export default function QrCodePage() {
   const onDownload = () => {
     const container = document.getElementById('qr-container-download'); 
     if (!container) return;
-
     html2canvas(container, {
       backgroundColor: null, 
       useCORS: true 
@@ -163,57 +168,23 @@ export default function QrCodePage() {
     });
   };
 
-  // --- Componente de Preview ---
-  const StylePreview = ({ type, style, currentStyle, onClick }) => {
-    const previewRef = useRef(null);
-
-    // Inicializa e desenha o preview
-    useEffect(() => {
-      if (previewRef.current) {
-        // Opções mínimas para o preview
-        const previewOptions = {
-          width: 50,
-          height: 50,
-          type: 'svg',
-          data: "https://kasper-labs.com", // Dados de teste
-          dotsOptions: { 
-            color: '#007aff', 
-            type: type === 'dots' ? style : 'square' // Pega o estilo de pontos
-          },
-          cornersSquareOptions: {
-            color: '#007aff',
-            type: type === 'corners' ? style : 'square' // Pega o estilo de cantos
-          },
-          backgroundOptions: { color: '#ffffff' },
-          imageOptions: { margin: 0 }
-        };
-        
-        // Se já tiver um preview, apenas atualiza
-        if (previewRef.current.children.length > 0) {
-            // Se o estilo de preview for de cantos, garantimos que os pontos sejam quadrados
-            if (type === 'corners') previewOptions.dotsOptions.type = 'square';
-            
-            // Cria uma nova instância para desenhar no DOM
-            const qr = new QRCodeStyling(previewOptions);
-            qr.append(previewRef.current);
-        } else {
-             const qr = new QRCodeStyling(previewOptions);
-             qr.append(previewRef.current);
-        }
-      }
-    }, [style, type]);
-    
-    // CORREÇÃO: Usamos o useEffect para garantir que o preview seja desenhado
-    // Usamos um novo componente para garantir o ciclo de vida
-    return (
-        <button 
-            className={`style-preview-button ${style === currentStyle ? 'active' : ''}`}
-            onClick={onClick}
-        >
-            <div ref={previewRef} className="style-preview-canvas" />
-        </button>
-    )
-  };
+  // --- Componente Seletor de Chip ---
+  const StyleChipSelector = ({ title, options, current, onChange }) => (
+    <div className="accordion-content">
+      <label>{title}</label>
+      <div className="style-chip-selector">
+        {options.map(option => (
+          <button
+            key={option.id}
+            className={`style-chip ${current === option.id ? 'active' : ''}`}
+            onClick={() => onChange(option.id)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="container">
@@ -227,7 +198,6 @@ export default function QrCodePage() {
       
       {decodedContent ? (
         <div className="qr-visual-section">
-          
           {/* O QR Code será montado aqui */}
           <div id="qr-container-download" className="qr-container">
             <div ref={ref} />
@@ -240,79 +210,81 @@ export default function QrCodePage() {
         <p>Gerando seu QR Code...</p>
       )}
 
-      {/* --- PAINEL DE PERSONALIZAÇÃO --- */}
+      {/* --- NOVO PAINEL DE PERSONALIZAÇÃO (ACCORDION) --- */}
       <div className="personalization-panel">
-        <h3 className="panel-title">Personalizar QR Code</h3>
         
-        {/* Controles de Cor */}
-        <div className="control-group">
-          <div className="control-item">
-            <label htmlFor="dotsColor">Cor (Pontos)</label>
-            <input 
-              id="dotsColor"
-              type="color" 
-              value={dotsColor} 
-              onChange={(e) => setDotsColor(e.target.value)} 
-            />
-          </div>
-          <div className="control-item">
-            <label htmlFor="bgColor">Cor (Fundo)</label>
-            <input 
-              id="bgColor"
-              type="color" 
-              value={bgColor} 
-              onChange={(e) => setBgColor(e.target.value)} 
-            />
-          </div>
-        </div>
-
-        {/* --- SELETOR DE ESTILO (PREVIEWS) --- */}
-        <h3 className="panel-title" style={{marginTop: '1.5rem'}}>Estilo dos Pontos</h3>
-        <div className="style-selector-grid">
-            {DOT_STYLES.map(style => (
-                <StylePreview 
-                    key={style}
-                    type="dots"
-                    style={style}
-                    currentStyle={dotsStyle}
-                    onClick={() => setDotsStyle(style)}
+        {/* Cores */}
+        <details>
+          <summary>Cores</summary>
+          <div className="accordion-content">
+            <div className="control-group">
+              <div className="control-item">
+                <label htmlFor="dotsColor">Cor (Pontos)</label>
+                <input 
+                  id="dotsColor"
+                  type="color" 
+                  value={dotsColor} 
+                  onChange={(e) => setDotsColor(e.target.value)} 
                 />
-            ))}
-        </div>
+              </div>
+              <div className="control-item">
+                <label htmlFor="bgColor">Cor (Fundo)</label>
+                <input 
+                  id="bgColor"
+                  type="color" 
+                  value={bgColor} 
+                  onChange={(e) => setBgColor(e.target.value)} 
+                />
+              </div>
+            </div>
+          </div>
+        </details>
+
+        {/* Estilo dos Pontos */}
+        <details>
+          <summary>Estilo dos Pontos</summary>
+          <StyleChipSelector
+            options={DOT_STYLES}
+            current={dotsStyle}
+            onChange={setDotsStyle}
+          />
+        </details>
         
-        <h3 className="panel-title" style={{marginTop: '1.5rem'}}>Estilo dos Cantos</h3>
-        <div className="style-selector-grid">
-            {CORNER_STYLES.map(style => (
-                <StylePreview 
-                    key={style}
-                    type="corners"
-                    style={style}
-                    currentStyle={cornerStyle}
-                    onClick={() => setCornerStyle(style)}
-                />
-            ))}
-        </div>
+        {/* Estilo dos Cantos */}
+        <details>
+          <summary>Estilo dos Cantos</summary>
+          <StyleChipSelector
+            options={CORNER_STYLES}
+            current={cornerStyle}
+            onChange={setCornerStyle}
+          />
+        </details>
 
-        {/* Upload de Logo */}
-        <h3 className="panel-title" style={{marginTop: '1.5rem'}}>Logo (Aumenta a Correção de Erro)</h3>
-        <div className="control-group">
-          <div className="control-item file-upload">
-            <label htmlFor="logoUpload" className="file-label">
-              {logo ? 'Logo Carregada' : 'Enviar Logo (Centro)'}
-            </label>
-            <input 
-              id="logoUpload"
-              type="file" 
-              accept="image/png, image/jpeg"
-              onChange={onLogoUpload} 
-            />
+        {/* Logo */}
+        <details>
+          <summary>Logo (Centro)</summary>
+          <div className="accordion-content">
+            <div className="control-group">
+              <div className="control-item file-upload">
+                <label htmlFor="logoUpload" className="file-label">
+                  {logo ? 'Logo Carregada' : 'Enviar Logo (PNG/JPG)'}
+                </label>
+                <input 
+                  id="logoUpload"
+                  type="file" 
+                  accept="image/png, image/jpeg"
+                  onChange={onLogoUpload} 
+                />
+              </div>
+              {logo && (
+                <button onClick={() => setLogo(null)} className="remove-logo-btn" style={{flex: 0.5, alignSelf: 'center'}}>
+                  Remover
+                </button>
+              )}
+            </div>
           </div>
-          {logo && (
-            <button onClick={() => setLogo(null)} className="remove-logo-btn">
-              Remover Logo
-            </button>
-          )}
-        </div>
+        </details>
+
       </div>
 
       {/* Botões de Ação */}
