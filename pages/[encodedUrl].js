@@ -85,7 +85,7 @@ const ContentDetails = ({ content }) => {
 // --- PÁGINA PRINCIPAL DO QR CODE ---
 export default function QrCodePage() {
   const router = useRouter();
-  const { encodedUrl } = router.query; // Rota /s/
+  const { encodedUrl } = router.query; // Rota /admin/
   const [decodedContent, setDecodedContent] = useState('');
   
   // Ref para o contêiner do QR Code

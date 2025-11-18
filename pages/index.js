@@ -61,7 +61,7 @@ export default function Home() {
     
     // CORREÇÃO DE ROTA: Codifica o conteúdo e envia para a página de admin
     const encodedContent = encodeURIComponent(content);
-    router.push(`/s/${encodedContent}`); // Manda para o Modo Completo
+    router.push(`/admin/${encodedContent}`); // Manda para o Modo Completo
   };
 
   // Renderização dos Formulários

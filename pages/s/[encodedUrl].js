@@ -85,9 +85,9 @@ export default function SimpleQrCodePage() {
         </div>
       </div>
       
-      {/* CORREÇÃO DE ROTA: Link para o Modo Completo (agora em /s/) */}
+      {/* CORREÇÃO DE ROTA: Link para o Modo Completo (agora em /admin/) */}
       <p className="mode-toggle-link">
-        Você está no modo simplificado. Para editar, acesse o <a href={`/s/${encodedUrl}`}>modo completo</a>.
+        Você está no modo simplificado. Para editar, acesse o <a href={`/admin/${encodedUrl}`}>modo completo</a>.
       </p>
     </div>
   );
