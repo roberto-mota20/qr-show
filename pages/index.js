@@ -40,6 +40,7 @@ const calculateCRC16 = (payload) => {
 
 const generatePixCopyPaste = ({ pixKey, name, city, amount, txid }) => {
   const key = pixKey.trim();
+  // Normalização conforme manual do Bacen: sem acentos, max 25 chars para nome
   const safeName = name.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 25);
   const safeCity = city.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 15);
   const safeTxid = txid.trim() || '***'; 
@@ -74,20 +75,19 @@ const generatePixCopyPaste = ({ pixKey, name, city, amount, txid }) => {
 };
 
 // --- PARSER DE IMPORTAÇÃO PIX (EMV MPM ROBUSTO) ---
-// Função que lê a string sequencialmente (ID -> TAMANHO -> VALOR)
+// Lê sequencialmente ID -> TAMANHO -> VALOR para evitar erros de leitura
 const parseEmv = (str) => {
   let i = 0;
   const result = {};
   while (i < str.length) {
-    if (i + 4 > str.length) break; // Proteção contra fim de string
+    if (i + 4 > str.length) break; 
     const id = str.substring(i, i + 2);
     const lenStr = str.substring(i + 2, i + 4);
     
-    // Verifica se o tamanho é numérico
     if (!/^\d+$/.test(lenStr)) break;
     
     const len = parseInt(lenStr, 10);
-    if (i + 4 + len > str.length) break; // Proteção de tamanho
+    if (i + 4 + len > str.length) break; 
     
     const val = str.substring(i + 4, i + 4 + len);
     result[id] = val;
@@ -101,18 +101,20 @@ const parseImportedPix = (raw) => {
     const root = parseEmv(raw);
     const data = { pixKey: '', name: '', city: '', amount: '', txid: '' };
 
-    // Extração básica
+    // ID 59: Merchant Name (Nome do Recebedor)
     data.name = root['59'] || '';
+    // ID 60: Merchant City
     data.city = root['60'] || '';
-    data.amount = root['54'] || ''; // Valor opcional
+    // ID 54: Transaction Amount
+    data.amount = root['54'] || '';
 
-    // Extração da Chave (Dentro do ID 26)
+    // ID 26: Merchant Account Information (contém a Chave no ID 01)
     if (root['26']) {
       const merchantAccount = parseEmv(root['26']);
       data.pixKey = merchantAccount['01'] || '';
     }
 
-    // Extração do TxID (Dentro do ID 62)
+    // ID 62: Additional Data Field (TxID no ID 05)
     if (root['62']) {
       const additionalData = parseEmv(root['62']);
       data.txid = additionalData['05'] || '';
@@ -129,7 +131,7 @@ const parseImportedPix = (raw) => {
 export default function Home() {
   const router = useRouter();
   
-  const [mode, setMode] = useState('link'); // link | wifi | text | email | pix
+  const [mode, setMode] = useState('link'); 
 
   // Inputs Comuns
   const [linkData, setLinkData] = useState('');
@@ -139,11 +141,12 @@ export default function Home() {
   
   // Inputs PIX
   const [pixTab, setPixTab] = useState('import'); // 'manual' | 'import'
-  const [importString, setImportString] = useState(''); // String colada
+  const [importString, setImportString] = useState(''); 
   const [pixData, setPixData] = useState({ pixKey: '', name: '', city: '', amount: '', txid: '' });
   const [pixHistory, setPixHistory] = useState([]);
 
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [pendingTargetPath, setPendingTargetPath] = useState('full'); 
 
@@ -154,12 +157,16 @@ export default function Home() {
     }
   }, []);
 
-  // Salvar no histórico (com flag de importado)
+  // Salvar no histórico
   const saveToPixHistory = (data, isImported = false) => {
-    const newItem = { ...data, isImported };
-    // Filtra duplicatas
-    const newHistory = [newItem, ...pixHistory.filter(item => item.pixKey !== data.pixKey || item.name !== data.name)];
-    const limitedHistory = newHistory.slice(0, 5);
+    // IMPORTANTE: Removemos o valor (amount) ao salvar no histórico
+    // para que o item sirva como um template reutilizável.
+    const dataToSave = { ...data, amount: '', isImported };
+    
+    // Filtra duplicatas baseadas na chave E no nome
+    const newHistory = [dataToSave, ...pixHistory.filter(item => item.pixKey !== data.pixKey)];
+    const limitedHistory = newHistory.slice(0, 10); // Aumentei para 10 itens
+    
     setPixHistory(limitedHistory);
     localStorage.setItem('kasper_pix_history', JSON.stringify(limitedHistory));
   };
@@ -171,9 +178,39 @@ export default function Home() {
   };
 
   const loadFromHistory = (item) => {
-    setPixData(item);
-    setPixTab('manual'); // Muda para aba manual para ver os dados carregados
+    // Carrega os dados do histórico para o formulário manual
+    setPixData({ ...item, amount: '' }); // Garante que o valor venha vazio para nova transação
+    setPixTab('manual'); 
     setError('');
+  };
+
+  // Ação do botão "Importar" na aba de Importação
+  const handleImportAction = () => {
+    setError('');
+    setSuccessMsg('');
+    
+    if (!importString.trim()) {
+        setError('Cole um código Pix válido para importar.');
+        return;
+    }
+
+    const parsed = parseImportedPix(importString.trim());
+    
+    if (parsed && parsed.pixKey) {
+        // 1. Salva no histórico (sem o valor, conforme lógica do saveToPixHistory)
+        saveToPixHistory(parsed, true);
+        
+        // 2. Preenche o formulário manual com os dados importados
+        // Mantemos o valor importado no formulário apenas para visualização momentânea, 
+        // mas ele não foi para o histórico.
+        setPixData(parsed);
+        
+        // 3. Muda para a aba manual para conferência
+        setPixTab('manual');
+        setSuccessMsg('Dados importados com sucesso! Verifique abaixo.');
+    } else {
+        setError('Não foi possível ler os dados deste código Pix. Verifique se está completo.');
+    }
   };
 
   const modes = [
@@ -191,7 +228,8 @@ export default function Home() {
       case 'wifi': return !wifiData.ssid.trim();
       case 'email': return !emailData.to.trim();
       case 'pix': 
-        if (pixTab === 'import') return !importString.trim();
+        // Na aba import, não valida vazio aqui pois tem botão próprio
+        if (pixTab === 'import') return false; 
         return !pixData.pixKey.trim() || !pixData.name.trim() || !pixData.city.trim();
       default: return true;
     }
@@ -216,16 +254,14 @@ export default function Home() {
         
       case 'pix':
         if (pixTab === 'import') {
-            // Parser Robusto
-            const parsed = parseImportedPix(importString);
-            if (parsed && parsed.name && parsed.pixKey) {
-                saveToPixHistory(parsed, true); 
-                return importString; // Usa a string original fiel
-            } else {
-                throw new Error("Código Pix inválido");
-            }
+             // Se o usuário tentar gerar direto da aba import, processamos igual ao botão importar
+             // Mas idealmente ele usa o botão de ação.
+             const parsed = parseImportedPix(importString);
+             if (parsed && parsed.pixKey) return importString;
+             throw new Error("Inválido");
         } else {
             // Manual
+            // Salva no histórico (sem valor) antes de gerar o payload
             saveToPixHistory(pixData, false);
             return generatePixCopyPaste(pixData);
         }
@@ -238,17 +274,22 @@ export default function Home() {
   const handleGenerate = (e, targetPath) => {
     if (e) e.preventDefault();
     setError(''); 
+    setSuccessMsg('');
+
+    // Bloqueio específico para Pix na aba Importar: forçar uso do botão de importação
+    if (mode === 'pix' && pixTab === 'import') {
+        setError('Por favor, clique em "Extrair e Salvar Dados" ou mude para a aba Manual.');
+        return;
+    }
 
     if (isContentEmpty()) {
       setError('Por favor, preencha as informações obrigatórias.');
       return;
     }
 
-    if (mode === 'link') {
-        if (linkData.length > MAX_LENGTH) {
-            setError(`Texto muito longo.`);
-            return;
-        }
+    if (mode === 'link' && linkData.length > MAX_LENGTH) {
+        setError(`Texto muito longo.`);
+        return;
     }
 
     if (mode === 'email' && !emailData.to.includes('@')) {
@@ -272,7 +313,7 @@ export default function Home() {
            router.push(`/${encodedContent}`);
         }
     } catch (err) {
-        setError("Erro ao processar. Verifique se os dados estão corretos.");
+        setError("Erro ao processar dados.");
     }
   };
 
@@ -386,14 +427,14 @@ export default function Home() {
                 <div className="pix-tabs">
                     <button 
                         className={`pix-tab-btn ${pixTab === 'import' ? 'active' : ''}`}
-                        onClick={() => { setPixTab('import'); setError(''); }}
+                        onClick={() => { setPixTab('import'); setError(''); setSuccessMsg(''); }}
                         type="button"
                     >
                         Importar (Recomendado)
                     </button>
                     <button 
                         className={`pix-tab-btn ${pixTab === 'manual' ? 'active' : ''}`}
-                        onClick={() => { setPixTab('manual'); setError(''); }}
+                        onClick={() => { setPixTab('manual'); setError(''); setSuccessMsg(''); }}
                         type="button"
                     >
                         Manual
@@ -405,10 +446,20 @@ export default function Home() {
                         <textarea
                             value={importString}
                             onChange={(e) => setImportString(e.target.value)}
-                            placeholder="Cole aqui o código 'Pix Copia e Cola' gerado pelo seu banco (começa com 000201...)"
+                            placeholder="Cole aqui o código 'Pix Copia e Cola' (começa com 000201...)"
                         />
+                        {/* Botão Específico de Importação */}
+                        <button 
+                            type="button" 
+                            className="submit-button" 
+                            style={{marginTop: '10px', width: '100%', backgroundColor: '#333', border: '1px solid #555'}}
+                            onClick={handleImportAction}
+                        >
+                            Extrair e Salvar Dados
+                        </button>
+                        
                         <p className="import-note">
-                            Nós extrairemos os dados automaticamente para o seu histórico.
+                            Isso extrairá os dados para o seu histórico e preencherá a aba Manual para você conferir.
                         </p>
                     </div>
                 ) : (
@@ -441,7 +492,7 @@ export default function Home() {
                         type="number"
                         value={pixData.amount}
                         onChange={(e) => setPixData({ ...pixData, amount: e.target.value })}
-                        placeholder="Valor (Opcional - ex: 10.50)"
+                        placeholder="Valor (Opcional - deixe vazio para livre)"
                         className="url-input"
                         step="0.01"
                         />
@@ -461,16 +512,16 @@ export default function Home() {
                 <h4>Guia Rápido Pix</h4>
                 {pixTab === 'import' ? (
                     <ul>
-                        <li><b>Importar:</b> A forma mais segura de garantir que o QR Code funcionará.</li>
-                        <li><b>Como fazer:</b> Abra o app do seu banco, crie um QR Code de cobrança e escolha "Copiar Código".</li>
-                        <li><b>Colar:</b> Cole o código gigante aqui. O sistema entenderá tudo.</li>
+                        <li><b>Importar:</b> Extrai Chave, Nome e Cidade de um Pix existente.</li>
+                        <li><b>Segurança:</b> Garante que os dados estão idênticos ao do banco.</li>
+                        <li><b>Histórico:</b> Salva os dados sem o valor, para você reutilizar depois.</li>
                     </ul>
                 ) : (
                     <ul>
                         <li><b>Chave:</b> Insira apenas números para CPF/CNPJ/Tel.</li>
-                        <li><b>Nome:</b> Use o nome exato da conta bancária. Evite acentos.</li>
-                        <li><b>Cidade:</b> Cidade da conta bancária.</li>
-                        <li><b>Valor:</b> Use ponto para centavos (ex: 1.50).</li>
+                        <li><b>Nome:</b> Nome do titular da conta (máx 25 letras).</li>
+                        <li><b>Cidade:</b> Cidade do titular da conta.</li>
+                        <li><b>Valor:</b> Se deixar vazio, quem paga digita o valor.</li>
                     </ul>
                 )}
             </div>
@@ -498,7 +549,7 @@ export default function Home() {
           <button
             key={m.id}
             className={`mode-button ${m.id === mode ? 'active' : ''}`}
-            onClick={() => { setMode(m.id); setError(''); }}
+            onClick={() => { setMode(m.id); setError(''); setSuccessMsg(''); }}
           >
             {m.label}
           </button>
@@ -509,38 +560,46 @@ export default function Home() {
         {renderForm()}
         
         {error && <div className="error-msg">{error}</div>}
+        {successMsg && <div className="error-msg" style={{color: '#34C759'}}>{successMsg}</div>}
 
-        <div style={{ display: 'flex', gap: '1rem', width: '100%', flexDirection: 'column', marginTop: '1rem' }}>
-          <button onClick={(e) => handleGenerate(e, 'full')} className="submit-button">
-            Criar QR Code (Personalizável)
-          </button>
+        {/* Botões de Geração (Escondidos se estiver na aba de importação do Pix, para forçar fluxo) */}
+        {!(mode === 'pix' && pixTab === 'import') && (
+            <div style={{ display: 'flex', gap: '1rem', width: '100%', flexDirection: 'column', marginTop: '1rem' }}>
+            <button onClick={(e) => handleGenerate(e, 'full')} className="submit-button">
+                Criar QR Code (Personalizável)
+            </button>
 
-          <button 
-            onClick={(e) => handleGenerate(e, 'simple')} 
-            className="submit-button"
-            style={{ 
-              backgroundColor: 'transparent', 
-              border: '2px solid #007aff',
-              color: '#007aff'
-            }}
-          >
-            Criar QR Code (Rápido)
-          </button>
-        </div>
+            <button 
+                onClick={(e) => handleGenerate(e, 'simple')} 
+                className="submit-button"
+                style={{ 
+                backgroundColor: 'transparent', 
+                border: '2px solid #007aff',
+                color: '#007aff'
+                }}
+            >
+                Criar QR Code (Rápido)
+            </button>
+            </div>
+        )}
 
         {/* Histórico Pix */}
         {mode === 'pix' && pixHistory.length > 0 && (
             <div className="pix-history-area">
-                <div className="history-title">Histórico Salvo (Local)</div>
+                <div className="history-title">Chaves Salvas (Sem Valor)</div>
                 <div className="history-list">
                     {pixHistory.map((item, idx) => (
                         <div key={idx} className="history-item">
                             <div className="history-content" onClick={() => loadFromHistory(item)}>
                                 <div className="history-header">
-                                    <span className="history-key">{item.pixKey || 'Chave Desconhecida'}</span>
+                                    {/* Mostra o NOME em destaque, pois é o identificador mais humano */}
+                                    <span className="history-key" style={{color: '#007aff'}}>{item.name || 'Sem Nome'}</span>
                                     {item.isImported && <span className="import-tag">Oficial</span>}
                                 </div>
-                                <span className="history-meta">{item.name} - {item.amount ? `R$ ${item.amount}` : 'Valor Livre'}</span>
+                                {/* Mostra a Chave e Cidade abaixo */}
+                                <span className="history-meta">
+                                    {item.pixKey} • {item.city}
+                                </span>
                             </div>
                             <button className="history-delete-btn" onClick={(e) => { e.preventDefault(); deleteFromHistory(idx); }} title="Remover">
                                 &times;

@@ -707,6 +707,27 @@ a:hover {
   resize: vertical;
   min-height: 120px;
   box-sizing: border-box; /* Importante para não estourar */
+  margin-bottom: 0.5rem;
+}
+
+/* Botão de Ação dentro da área de importação */
+.import-action-btn {
+  width: 100%;
+  padding: 0.6rem;
+  background-color: #1c1c1c;
+  border: 1px solid #007aff;
+  color: #007aff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 700;
+  transition: all 0.2s;
+  margin-top: 0.5rem;
+}
+
+.import-action-btn:hover {
+  background-color: #007aff;
+  color: white;
 }
 
 .import-note {
