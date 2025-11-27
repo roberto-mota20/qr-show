@@ -144,7 +144,7 @@ export default function Home() {
             type="text"
             value={linkData}
             onChange={(e) => setLinkData(e.target.value)}
-            placeholder="URL (ex: google)"
+            placeholder="URL (ex: kasper-labs.com)"
             className="url-input"
             required
           />
@@ -157,7 +157,7 @@ export default function Home() {
               type="text"
               value={wifiData.ssid}
               onChange={(e) => setWifiData({ ...wifiData, ssid: e.target.value })}
-              placeholder="Nome da Rede (SSID)"
+              placeholder="Nome da Rede (ex: Kasper-Guest)"
               className="url-input"
               required
             />
@@ -187,7 +187,7 @@ export default function Home() {
           <textarea
             value={textData}
             onChange={(e) => setTextData(e.target.value)}
-            placeholder="Digite o texto que o QR Code deve conter..."
+            placeholder="Digite o texto... (ex: Bem-vindo à Kasper Labs!)"
             className="url-input"
             rows="4"
             required
@@ -201,7 +201,7 @@ export default function Home() {
               type="text" 
               value={emailData.to}
               onChange={(e) => setEmailData({ ...emailData, to: e.target.value })}
-              placeholder="E-mail de Destino (ex: contato)"
+              placeholder="E-mail de Destino (ex: contato@kasper-labs.com)"
               className="url-input"
               required
             />
@@ -209,13 +209,13 @@ export default function Home() {
               type="text"
               value={emailData.subject}
               onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
-              placeholder="Assunto (Opcional)"
+              placeholder="Assunto (ex: Parceria Kasper)"
               className="url-input"
             />
             <textarea
               value={emailData.body}
               onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
-              placeholder="Corpo da Mensagem (Opcional)"
+              placeholder="Mensagem (ex: Olá equipe Kasper...)"
               className="url-input"
               rows="3"
             />
