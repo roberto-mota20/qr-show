@@ -27,14 +27,12 @@ export default function Home() {
     switch (mode) {
       case 'link':
         let finalUrl = linkData.trim();
-        // Adiciona "https://" se o protocolo não for encontrado
         if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
           finalUrl = 'https://' + finalUrl;
         }
         return finalUrl;
 
       case 'wifi':
-        // Formato padrão Wi-Fi: WIFI:T:<SECURITY>;S:<SSID>;P:<PASSWORD>;;
         const securityType = wifiData.security || 'WPA';
         return `WIFI:T:${securityType};S:${wifiData.ssid};P:${wifiData.password};;`;
 
@@ -42,7 +40,6 @@ export default function Home() {
         return textData;
 
       case 'email':
-        // Formato padrão E-mail: mailto:<email>?subject=<assunto>&body=<body>
         return `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
         
       default:
@@ -50,7 +47,8 @@ export default function Home() {
     }
   };
 
-  const handleSubmit = (e) => {
+  // Função genérica para gerar (recebe o destino como argumento)
+  const handleGenerate = (e, targetPath) => {
     e.preventDefault();
     const content = formatContent();
     
@@ -59,9 +57,14 @@ export default function Home() {
       return;
     }
     
+    // Codifica o conteúdo
     const encodedContent = encodeURIComponent(content);
-    // MUDANÇA AQUI: Agora enviamos para /s/ (Modo Completo/Setup)
-    router.push(`/s/${encodedContent}`); 
+    
+    if (targetPath === 'full') {
+       router.push(`/full/${encodedContent}`);
+    } else {
+       router.push(`/${encodedContent}`);
+    }
   };
 
   // Renderização dos Formulários
@@ -167,6 +170,7 @@ export default function Home() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
 
+      {/* Seletor de Modo */}
       <div className="mode-selector">
         {modes.map((m) => (
           <button
@@ -179,11 +183,32 @@ export default function Home() {
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="qr-form">
+      {/* Formulário de Input */}
+      <form className="qr-form">
         {renderForm()}
-        <button type="submit" className="submit-button">
-          Gerar QR Code de {modes.find(m => m.id === mode)?.label}
-        </button>
+        
+        {/* Grupo de Botões de Ação */}
+        <div style={{ display: 'flex', gap: '1rem', width: '100%', flexDirection: 'column' }}>
+          
+          {/* Botão para Modo Completo (Destaque) */}
+          <button onClick={(e) => handleGenerate(e, 'full')} className="submit-button">
+            Criar QR Code (Personalizável)
+          </button>
+
+          {/* Botão para Modo Simples (Secundário) */}
+          <button 
+            onClick={(e) => handleGenerate(e, 'simple')} 
+            className="submit-button"
+            style={{ 
+              backgroundColor: 'transparent', 
+              border: '2px solid #007aff',
+              color: '#007aff'
+            }}
+          >
+            Criar QR Code (Rápido)
+          </button>
+
+        </div>
       </form>
 
       <div className="project-link">

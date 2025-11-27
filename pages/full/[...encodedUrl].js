@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
-import Head from 'next/head'; // Corrigido aqui!
+import Head from 'next/head';
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
 
@@ -20,7 +20,6 @@ const CORNER_STYLES = [
   { id: 'dot', label: 'Ponto' },
 ];
 
-// Componente de Análise de Conteúdo (Parse)
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
   
@@ -49,7 +48,6 @@ const parseQrContent = (content) => {
   }
 };
 
-// Componente de Detalhes do Conteúdo
 const ContentDetails = ({ content }) => {
   const { type, details } = parseQrContent(content);
   const Title = ({ text }) => <h3 className="detail-title">{text}</h3>;
@@ -138,7 +136,11 @@ export default function QrCodePage() {
   useEffect(() => {
     if (encodedUrl) {
       try {
-        const content = decodeURIComponent(encodedUrl);
+        // Correção para Catch-all: encodedUrl pode ser um array ['https:', 'google.com']
+        // Juntamos com '/' para refazer a URL original
+        const rawContent = Array.isArray(encodedUrl) ? encodedUrl.join('/') : encodedUrl;
+        const content = decodeURIComponent(rawContent);
+        
         setDecodedContent(content);
         
         if (qrInstance) {
@@ -319,7 +321,7 @@ export default function QrCodePage() {
       </div>
 
       <p className="mode-toggle-link">
-        Para uma visualização limpa, acesse o <a href={`/${encodedUrl}`}>modo simplificado</a>.
+        Para uma visualização limpa, acesse o <a href={`/${encodeURIComponent(decodedContent)}`}>modo simplificado</a>.
       </p>
 
     </div>
