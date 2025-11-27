@@ -35,6 +35,7 @@ body {
   white-space: normal; /* Permite quebra de linha */
   overflow: hidden; 
   overflow-wrap: break-word; /* Mantém a propriedade moderna */
+  cursor: pointer; /* Indica que é clicável */
 }
 
 /* Mídia query para ajustar logo em telas pequenas */
@@ -253,31 +254,10 @@ a:hover {
 }
 
 /* Estilo específico para o link de "conheça o projeto" - BOTÃO CINZA/HIPERLINK */
+/* Agora tratado inline no index.js, mas mantendo caso use classes antigas */
 .project-link {
   margin-top: 2rem;
   font-size: 0.9rem;
-}
-
-.project-link a {
-  /* Estilo de Botão Cinza/Soft Black */
-  font-family: 'Roboto Mono', monospace; 
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 0.75rem 1.5rem;
-  background-color: #1c1c1c; /* Preto Suave/Cinza */
-  color: #007aff; /* Azul Claro */
-  border: 1px solid #007aff; /* Borda Azul */
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  display: inline-block;
-  text-decoration: none;
-}
-
-.project-link a:hover {
-  background-color: #007aff;
-  color: #ffffff;
-  text-decoration: none;
 }
 
 /* --- NOVOS ESTILOS DE PERSONALIZAÇÃO (ACCORDION) --- */
@@ -453,70 +433,67 @@ a:hover {
   }
 }
 
-/* --- CORREÇÃO: Reintroduzindo o Grid de Layout --- */
+/* --- GRID DE LAYOUT PRINCIPAL (Desktop) --- */
+/* Padrão para Mobile (Coluna única) */
 .main-layout-grid {
-  display: flex; /* Padrão mobile: coluna */
+  display: flex; 
   flex-direction: column;
   gap: 2rem;
   width: 100%;
-  align-items: center; /* Centraliza no mobile */
+  align-items: center; 
 }
 
+/* --- ALTERAÇÃO AQUI: Mudando layout Desktop para Vertical --- */
 @media (min-width: 1024px) { /* Em telas grandes (desktop) */
   .main-layout-grid {
-    display: grid;
-    /* CORREÇÃO: Coluna da esquerda flexível, Coluna da direita FIXA */
-    grid-template-columns: 1fr 450px; 
-    align-items: flex-start; /* Alinha os topos */
-    gap: 2.5rem;
+    display: flex; /* Mudamos de Grid para Flex Column para colocar o painel embaixo */
+    flex-direction: column; 
+    align-items: center; 
+    gap: 3rem; /* Espaço entre o topo (QR+Info) e o painel embaixo */
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
   .qr-visual-section {
-    /* No grid, faz a coluna visual ficar vertical e alinhada ao CENTRO */
-    flex-direction: column; 
-    align-items: center; /* Centraliza a coluna visual */
+    /* No desktop, mantemos QR e Detalhes lado a lado (Row) */
+    display: flex;
+    flex-direction: row; 
+    align-items: flex-start; 
+    justify-content: center;
+    gap: 4rem; /* Espaçamento generoso entre QR e Info */
+    width: 100%;
     margin: 0;
   }
   
-  /* Faz o QR e os Detalhes ficarem Lado-a-Lado dentro da coluna esquerda */
-  .qr-visual-section {
-     flex-direction: row; 
-     align-items: flex-start; 
-     justify-content: center;
-     gap: 2.5rem;
-     max-width: none;
-  }
-
   .right-column-wrapper {
-    width: 450px; /* Largura FIXA da coluna da direita */
-    max-width: 450px;
+    /* O painel agora vai para baixo e centraliza */
+    width: 100%; 
+    max-width: 700px; /* Largura controlada para o painel não esticar demais */
     margin: 0;
     
-    /* CORREÇÃO: Alinha o painel e os botões ao centro da coluna */
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2rem; /* Adicionado gap para espaçar painel e botões */
+    gap: 2rem; 
   }
 
   .personalization-panel {
-    max-width: 100%; /* Ocupa 100% da coluna direita */
+    max-width: 100%; 
     margin: 0;
   }
 
-  /* CORREÇÃO DO BOTÃO: Força os botões a empilhar no grid */
+  /* Ajuste dos botões de ação para ficarem lado a lado abaixo do painel */
   .main-layout-grid .action-buttons {
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%; /* Ocupa 100% da coluna direita */
+    flex-direction: row;
+    gap: 1.5rem;
+    width: 100%;
+    justify-content: center;
   }
 
-  /* Faz os botões empilhados terem 100% de largura */
   .main-layout-grid .action-buttons .submit-button,
   .main-layout-grid .action-buttons a {
-    width: 100%;
-    min-width: auto; /* Reseta o min-width */
-    box-sizing: border-box; /* Garante que o padding não estoure */
+    width: auto; 
+    min-width: 220px; 
   }
 }
 
@@ -563,7 +540,7 @@ a:hover {
   padding: 0 1.5rem 1.5rem 1.5rem; 
 }
 
-/* NOVO: Estilo para os links de troca de modo */
+/* Estilo para os links de troca de modo */
 .mode-toggle-link {
   color: #aaaaaa; /* Cinza claro */
   font-size: 0.9rem;
