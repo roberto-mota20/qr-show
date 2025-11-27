@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
+import Link from 'next/link'; // Import Link
 import QRCodeStyling from 'qr-code-styling';
 
 const qrOptions = {
@@ -38,25 +39,17 @@ export default function SimpleQrCodePage() {
   useEffect(() => {
     if (encodedUrl) {
       try {
-        // 1. Pega o conteúdo (se for array, junta com barras)
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
         
-        // Se o array tiver mais de 1 item, significa que a URL não estava codificada (tem barras nela)
-        // Então vamos redirecionar para a versão codificada para ficar igual à Home.
         if (rawArray.length > 1) {
           let reconstructed = rawArray.join('/');
-          // Corrige protocolo quebrado pelo navegador (https:/ -> https://)
           reconstructed = reconstructed.replace(/^(https?):\/([^\/])/, '$1://$2');
           
-          // Redireciona para a URL codificada correta
           router.replace(`/${encodeURIComponent(reconstructed)}`);
           return;
         }
 
-        // Se chegou aqui, é porque já está codificado ou é simples. Decodifica e gera.
         let rawContent = rawArray[0]; 
-        // Decodifica apenas se necessário (Next.js as vezes já entrega decodificado parte do caminho)
-        // Mas como estamos garantindo o encode no redirect acima, aqui garantimos o decode.
         const content = decodeURIComponent(rawContent);
 
         setDecodedContent(content);
@@ -75,9 +68,12 @@ export default function SimpleQrCodePage() {
         <title>QR Code | Kasper-Labs</title>
       </Head>
 
-      <h1 className="kasper-logo">
-        &lt;/kasper-<span className="blue-text">labs</span>&gt;
-      </h1>
+      {/* Logo linkada para a Home */}
+      <Link href="/" style={{ textDecoration: 'none' }}>
+        <h1 className="kasper-logo" style={{ cursor: 'pointer' }}>
+          &lt;/kasper-<span className="blue-text">labs</span>&gt;
+        </h1>
+      </Link>
       
       <div className="qr-container-simple">
         <div className="qr-square-part">

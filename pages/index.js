@@ -211,8 +211,16 @@ export default function Home() {
         </div>
       </form>
 
-      <div className="project-link">
-        <a href="https://www.kasper-labs.com" target="_blank" rel="noopener noreferrer">
+      {/* Ajustado: Removida a classe 'project-link' que dava estilo de botão e adicionado estilo simples */}
+      <div style={{ marginTop: '2rem', fontSize: '0.9rem' }}>
+        <a 
+          href="https://www.kasper-labs.com" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ color: '#007aff', textDecoration: 'none', cursor: 'pointer' }}
+          onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+          onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+        >
           Conheça o projeto
         </a>
       </div>

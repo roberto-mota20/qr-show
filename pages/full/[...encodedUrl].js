@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
+import Link from 'next/link'; // Import Link
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
 
@@ -138,21 +139,16 @@ export default function QrCodePage() {
       try {
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
         
-        // --- NORMALIZAÇÃO E REDIRECT ---
-        // Se a URL veio "quebrada" (com barras não codificadas), reconstruímos e redirecionamos.
         if (rawArray.length > 1) {
             let reconstructed = rawArray.join('/');
             reconstructed = reconstructed.replace(/^(https?):\/([^\/])/, '$1://$2');
             
-            // Redireciona para /full/URL_CODIFICADA
             router.replace(`/full/${encodeURIComponent(reconstructed)}`);
             return;
         }
 
-        // Se já está ok, decodifica e mostra
         const rawContent = rawArray[0];
         const content = decodeURIComponent(rawContent);
-        
         setDecodedContent(content);
         
         if (qrInstance) {
@@ -217,9 +213,12 @@ export default function QrCodePage() {
         <title>Editor QR | Kasper-Labs</title>
       </Head>
 
-      <h1 className="kasper-logo">
-        &lt;/kasper-<span className="blue-text">labs</span>&gt;
-      </h1>
+      {/* Logo linkada para a Home */}
+      <Link href="/" style={{ textDecoration: 'none' }}>
+        <h1 className="kasper-logo" style={{ cursor: 'pointer' }}>
+          &lt;/kasper-<span className="blue-text">labs</span>&gt;
+        </h1>
+      </Link>
       
       <div className="main-layout-grid">
         {decodedContent ? (
