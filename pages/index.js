@@ -59,9 +59,9 @@ export default function Home() {
       return;
     }
     
-    // CORREÇÃO DE ROTA: Codifica o conteúdo e envia para a página de admin
     const encodedContent = encodeURIComponent(content);
-    router.push(`/admin/${encodedContent}`); // Manda para o Modo Completo
+    // MUDANÇA AQUI: Agora enviamos para /s/ (Modo Completo/Setup)
+    router.push(`/s/${encodedContent}`); 
   };
 
   // Renderização dos Formulários
@@ -96,12 +96,12 @@ export default function Home() {
               onChange={(e) => setWifiData({ ...wifiData, password: e.target.value })}
               placeholder="Senha"
               className="url-input"
-              required={wifiData.security !== 'nopass'} // Senha só é obrigatória se não for 'Sem Senha'
+              required={wifiData.security !== 'nopass'} 
             />
             <select
               value={wifiData.security}
               onChange={(e) => setWifiData({ ...wifiData, security: e.target.value })}
-              className="url-input" // Reutiliza o estilo de input
+              className="url-input"
               style={{ padding: '10px' }}
             >
               <option value="WPA">WPA/WPA2</option>
@@ -163,12 +163,10 @@ export default function Home() {
         <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, Wi-Fi, Texto e E-mail." />
       </Head>
 
-      {/* Logo da Kasper-Labs */}
       <h1 className="kasper-logo">
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
 
-      {/* Seletor de Modo */}
       <div className="mode-selector">
         {modes.map((m) => (
           <button
@@ -181,7 +179,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Formulário de Input */}
       <form onSubmit={handleSubmit} className="qr-form">
         {renderForm()}
         <button type="submit" className="submit-button">
@@ -189,7 +186,6 @@ export default function Home() {
         </button>
       </form>
 
-      {/* Hiperlink para o projeto, usando <a> tag para ser um hiperlink real */}
       <div className="project-link">
         <a href="https://www.kasper-labs.com" target="_blank" rel="noopener noreferrer">
           Conheça o projeto
