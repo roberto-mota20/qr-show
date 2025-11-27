@@ -136,14 +136,23 @@ export default function QrCodePage() {
   useEffect(() => {
     if (encodedUrl) {
       try {
-        // --- CORREÇÃO DE URL (Mesma lógica do Simple) ---
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
-        let rawContent = rawArray.join('/');
         
-        // Corrige https:/ para https://
-        rawContent = rawContent.replace(/^(https?):\/([^\/])/, '$1://$2');
-        
+        // --- NORMALIZAÇÃO E REDIRECT ---
+        // Se a URL veio "quebrada" (com barras não codificadas), reconstruímos e redirecionamos.
+        if (rawArray.length > 1) {
+            let reconstructed = rawArray.join('/');
+            reconstructed = reconstructed.replace(/^(https?):\/([^\/])/, '$1://$2');
+            
+            // Redireciona para /full/URL_CODIFICADA
+            router.replace(`/full/${encodeURIComponent(reconstructed)}`);
+            return;
+        }
+
+        // Se já está ok, decodifica e mostra
+        const rawContent = rawArray[0];
         const content = decodeURIComponent(rawContent);
+        
         setDecodedContent(content);
         
         if (qrInstance) {
@@ -157,7 +166,7 @@ export default function QrCodePage() {
         console.error("URL inválida:", e);
       }
     }
-  }, [encodedUrl, qrInstance, options]); 
+  }, [encodedUrl, qrInstance, options, router]); 
 
   const onLogoUpload = (e) => {
     const file = e.target.files[0];

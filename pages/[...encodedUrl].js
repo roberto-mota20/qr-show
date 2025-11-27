@@ -3,26 +3,14 @@ import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
 import QRCodeStyling from 'qr-code-styling';
 
-// Opções de QR Code para o modo simples (QUADRADÃO)
 const qrOptions = {
   width: 256,
   height: 256,
   type: 'svg',
-  dotsOptions: {
-    color: '#000000', // Preto Puro
-    type: 'square' // Padrão Quadrado
-  },
-  backgroundOptions: {
-    color: '#ffffff', // Branco Puro
-  },
-  cornersSquareOptions: {
-    color: '#000000',
-    type: 'square' // Padrão Quadrado
-  },
-  imageOptions: {
-    crossOrigin: 'anonymous',
-    margin: 4 
-  }
+  dotsOptions: { color: '#000000', type: 'square' },
+  backgroundOptions: { color: '#ffffff' },
+  cornersSquareOptions: { color: '#000000', type: 'square' },
+  imageOptions: { crossOrigin: 'anonymous', margin: 4 }
 };
 
 export default function SimpleQrCodePage() {
@@ -48,27 +36,38 @@ export default function SimpleQrCodePage() {
   }, [qrInstance]);
 
   useEffect(() => {
-    if (encodedUrl &&qrInstance) {
+    if (encodedUrl) {
       try {
-        // --- CORREÇÃO DE URL ---
-        // 1. Garante que é um array e junta com '/' para remover as vírgulas indesejadas
+        // 1. Pega o conteúdo (se for array, junta com barras)
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
-        let rawContent = rawArray.join('/');
+        
+        // Se o array tiver mais de 1 item, significa que a URL não estava codificada (tem barras nela)
+        // Então vamos redirecionar para a versão codificada para ficar igual à Home.
+        if (rawArray.length > 1) {
+          let reconstructed = rawArray.join('/');
+          // Corrige protocolo quebrado pelo navegador (https:/ -> https://)
+          reconstructed = reconstructed.replace(/^(https?):\/([^\/])/, '$1://$2');
+          
+          // Redireciona para a URL codificada correta
+          router.replace(`/${encodeURIComponent(reconstructed)}`);
+          return;
+        }
 
-        // 2. Corrige o protocolo "https:/" para "https://" (navegadores removem uma barra na URL)
-        // Regex: Se começar com http:/ ou https:/ seguido de algo que NÃO seja barra, adiciona a barra extra
-        rawContent = rawContent.replace(/^(https?):\/([^\/])/, '$1://$2');
-
+        // Se chegou aqui, é porque já está codificado ou é simples. Decodifica e gera.
+        let rawContent = rawArray[0]; 
+        // Decodifica apenas se necessário (Next.js as vezes já entrega decodificado parte do caminho)
+        // Mas como estamos garantindo o encode no redirect acima, aqui garantimos o decode.
         const content = decodeURIComponent(rawContent);
 
         setDecodedContent(content);
-        qrInstance.update({ data: content });
+        if (qrInstance) qrInstance.update({ data: content });
+
       } catch (e) {
-        console.error("URL inválida:", e);
-        setDecodedContent("URL inválida ou malformada.");
+        console.error("Erro ao processar URL:", e);
+        setDecodedContent("URL inválida.");
       }
     }
-  }, [encodedUrl, qrInstance]);
+  }, [encodedUrl, qrInstance, router]);
 
   return (
     <div className="container">
@@ -89,7 +88,6 @@ export default function SimpleQrCodePage() {
         </div>
       </div>
       
-      {/* Link para o modo completo (agora em /full/) */}
       <p className="mode-toggle-link">
         Você está no modo simplificado. Para editar, acesse o <a href={`/full/${encodeURIComponent(decodedContent)}`}>modo completo</a>.
       </p>
