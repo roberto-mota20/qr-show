@@ -44,11 +44,13 @@ export default function SimpleQrCodePage() {
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
         let rawContent = rawArray.join('/');
 
+        // Validação de tamanho bruto
         if (rawContent.length > MAX_LENGTH) {
             router.replace('/404');
             return;
         }
         
+        // Correção de protocolo (https:/ -> https://) e redirecionamento para URL "bonita"
         if (rawArray.length > 1) {
           let reconstructed = rawArray.join('/');
           reconstructed = reconstructed.replace(/^(https?):\/([^\/])/, '$1://$2');
@@ -59,6 +61,7 @@ export default function SimpleQrCodePage() {
 
         const content = decodeURIComponent(rawArray[0]);
 
+        // Validação final de tamanho
         if (content.length > MAX_LENGTH) {
             router.replace('/404');
             return;
@@ -74,12 +77,9 @@ export default function SimpleQrCodePage() {
     }
   }, [encodedUrl, qrInstance, router]);
 
-  // Detector simples de Pix para o título
-  const isPix = decodedContent && decodedContent.startsWith('000201');
-  const displayTitle = isPix ? 'Pix Copia e Cola' : decodedContent;
-
+  // Título da página limpo
   const pageTitle = decodedContent 
-    ? `qr.kasper-labs.com | ${displayTitle.substring(0, 30)}${displayTitle.length > 30 ? '...' : ''}`
+    ? `qr.kasper-labs.com | ${decodedContent.substring(0, 30)}${decodedContent.length > 30 ? '...' : ''}`
     : 'QR Code | Kasper-Labs';
 
   return (
@@ -99,15 +99,8 @@ export default function SimpleQrCodePage() {
           <div ref={ref} />
         </div>
         <div className="simple-payload">
-            {/* Se for Pix, avisa que é Pix, senão mostra o conteúdo */}
-            {isPix ? (
-              <span style={{color: '#007aff', display: 'block', wordBreak: 'break-all'}}>
-                CHAVE PIX DETECTADA<br/>
-                <span style={{fontSize: '0.7em', color: '#555'}}>(Use o app do banco para ler ou copie o código abaixo)</span>
-                <br/><br/>
-                {decodedContent}
-              </span>
-            ) : decodedContent}
+            {/* Visualização limpa: apenas o conteúdo */}
+            {decodedContent}
         </div>
       </div>
       
