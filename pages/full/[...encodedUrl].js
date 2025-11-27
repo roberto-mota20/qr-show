@@ -21,11 +21,37 @@ const CORNER_STYLES = [
   { id: 'dot', label: 'Ponto' },
 ];
 
-const MAX_LENGTH = 2048; // Limite de segurança
+const MAX_LENGTH = 2048;
 
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
   
+  // Detecção de PIX (EMV QRCPS-MPM começa com 000201)
+  if (content.startsWith('000201')) {
+      // Extração básica (muito simplificada para exibição)
+      // O ideal seria um parser EMV completo, mas vamos tentar achar o Nome e Valor por ID
+      let name = 'N/A';
+      let amount = 'Livre';
+      
+      // Tenta achar merchant name (ID 59)
+      const nameMatch = content.match(/59(\d{2})([^0-9]+)/); // Simplificado
+      // Uma busca mais robusta por IDs
+      try {
+          const idxName = content.indexOf('59');
+          if (idxName > -1) {
+             const len = parseInt(content.substring(idxName + 2, idxName + 4));
+             name = content.substring(idxName + 4, idxName + 4 + len);
+          }
+          const idxAmount = content.indexOf('54');
+          if (idxAmount > -1) {
+             const len = parseInt(content.substring(idxAmount + 2, idxAmount + 4));
+             amount = 'R$ ' + content.substring(idxAmount + 4, idxAmount + 4 + len);
+          }
+      } catch (e) {}
+
+      return { type: 'Pix (Pagamento)', details: { name, amount, raw: content } };
+  }
+
   if (content.startsWith('WIFI:')) {
     const data = {};
     const parts = content.substring(5).slice(0, -2).split(';').map(p => p.trim());
@@ -63,6 +89,9 @@ const ContentDetails = ({ content }) => {
 
   let detailContent;
   switch (type) {
+    case 'Pix (Pagamento)':
+      detailContent = ( <div className="detail-group"> <Title text="Pagamento Pix" /> <DetailItem label="Beneficiário" value={details.name} /> <DetailItem label="Valor" value={details.amount} /> <div style={{marginTop: '10px', fontSize: '0.8rem', color: '#555', wordBreak: 'break-all'}}>{details.raw.substring(0, 50)}...</div> </div> );
+      break;
     case 'Wi-Fi':
       detailContent = ( <div className="detail-group"> <Title text="Dados da Rede Wi-Fi" /> <DetailItem label="SSID (Rede)" value={details.ssid || 'N/A'} /> <DetailItem label="Segurança" value={details.security || 'N/A'} /> <DetailItem label="Senha" value={details.password ? 'Sim (Exibida no QR)' : 'Não'} /> </div> );
       break;
@@ -142,7 +171,6 @@ export default function QrCodePage() {
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
         let rawContent = rawArray.join('/');
 
-        // Verifica tamanho excessivo antes de processar
         if (rawContent.length > MAX_LENGTH) {
             router.replace('/404');
             return;
@@ -158,7 +186,6 @@ export default function QrCodePage() {
 
         const content = decodeURIComponent(rawArray[0]);
         
-        // Verifica tamanho após decodificar também
         if (content.length > MAX_LENGTH) {
             router.replace('/404');
             return;
@@ -222,9 +249,11 @@ export default function QrCodePage() {
     </div>
   );
 
-  // Define o título da página dinamicamente
+  const isPix = decodedContent && decodedContent.startsWith('000201');
+  const displayTitle = isPix ? 'Pix Copia e Cola' : decodedContent;
+
   const pageTitle = decodedContent 
-    ? `qr.kasper-labs.com | ${decodedContent.substring(0, 30)}${decodedContent.length > 30 ? '...' : ''}`
+    ? `qr.kasper-labs.com | ${displayTitle.substring(0, 30)}${displayTitle.length > 30 ? '...' : ''}`
     : 'Editor QR | Kasper-Labs';
 
   return (
@@ -233,7 +262,6 @@ export default function QrCodePage() {
         <title>{pageTitle}</title>
       </Head>
 
-      {/* Logo linkada para a Home */}
       <Link href="/" style={{ textDecoration: 'none' }}>
         <h1 className="kasper-logo" style={{ cursor: 'pointer' }}>
           &lt;/kasper-<span className="blue-text">labs</span>&gt;

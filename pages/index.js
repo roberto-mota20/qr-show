@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
@@ -11,25 +11,128 @@ const EMAIL_PROVIDERS = [
   '@yahoo.com'
 ];
 
-// Limite seguro para URLs (maioria dos navegadores suporta até 2048)
 const MAX_LENGTH = 2048;
+
+// --- FUNÇÕES AUXILIARES PARA O PIX ---
+
+// Função para formatar os campos do Pix (ID + Tamanho + Valor)
+const formatPixField = (id, value) => {
+  const val = value.toString();
+  const len = val.length.toString().padStart(2, '0');
+  return `${id}${len}${val}`;
+};
+
+// Função para calcular o CRC16 (Padrão CCITT-FALSE)
+const calculateCRC16 = (payload) => {
+  let crc = 0xFFFF;
+  const polynomial = 0x1021;
+
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= (payload.charCodeAt(i) << 8);
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = (crc << 1) ^ polynomial;
+      } else {
+        crc = crc << 1;
+      }
+    }
+  }
+  return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+};
+
+// Função Principal que Gera o Código Pix Copia e Cola
+const generatePixCopyPaste = ({ pixKey, name, city, amount, txid }) => {
+  // Tratamento dos dados
+  const key = pixKey.trim();
+  // Remove acentos e caracteres especiais para compatibilidade máxima (padrão EMV safe)
+  const safeName = name.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 25);
+  const safeCity = city.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 15);
+  const safeTxid = txid.trim() || '***'; // Padrão se vazio é ***
+  
+  // Se houver valor, formata (ex: 10.00). Se não, não inclui o campo.
+  let amountField = '';
+  if (amount) {
+    const formattedAmount = parseFloat(amount.replace(',', '.')).toFixed(2);
+    amountField = formatPixField('54', formattedAmount);
+  }
+
+  // Montagem do Payload
+  let payload = [
+    formatPixField('00', '01'), // Payload Format Indicator
+    formatPixField('26', // Merchant Account Information
+      formatPixField('00', 'BR.GOV.BCB.PIX') + // GUI
+      formatPixField('01', key) // Chave
+    ),
+    formatPixField('52', '0000'), // Merchant Category Code
+    formatPixField('53', '986'), // Transaction Currency (BRL)
+    amountField, // Transaction Amount (Opcional)
+    formatPixField('58', 'BR'), // Country Code
+    formatPixField('59', safeName), // Merchant Name
+    formatPixField('60', safeCity), // Merchant City
+    formatPixField('62', // Additional Data Field
+      formatPixField('05', safeTxid) // Reference Label (TxID)
+    )
+  ].join('');
+
+  // Adiciona o ID do CRC16 '63' e o tamanho '04'
+  payload += '6304';
+
+  // Calcula e adiciona o CRC
+  payload += calculateCRC16(payload);
+
+  return payload;
+};
+
 
 export default function Home() {
   const router = useRouter();
   
   // Estado para controlar o tipo de QR Code
-  const [mode, setMode] = useState('link'); // link | wifi | text | email
+  const [mode, setMode] = useState('link'); // link | wifi | text | email | pix
 
   // Estados dos dados dos formulários
   const [linkData, setLinkData] = useState('');
   const [textData, setTextData] = useState('');
   const [emailData, setEmailData] = useState({ to: '', subject: '', body: '' });
   const [wifiData, setWifiData] = useState({ ssid: '', password: '', security: 'WPA' });
+  
+  // Estado do PIX
+  const [pixData, setPixData] = useState({ pixKey: '', name: '', city: '', amount: '', txid: '' });
+  const [pixHistory, setPixHistory] = useState([]);
 
   // Estados de Validação e UI
   const [error, setError] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [pendingTargetPath, setPendingTargetPath] = useState('full'); // Para lembrar onde ir após o modal
+  const [pendingTargetPath, setPendingTargetPath] = useState('full'); 
+
+  // Carregar histórico do LocalStorage ao iniciar
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('kasper_pix_history');
+    if (savedHistory) {
+      setPixHistory(JSON.parse(savedHistory));
+    }
+  }, []);
+
+  // Salvar no histórico
+  const saveToPixHistory = (data) => {
+    // Evita duplicatas exatas no topo
+    const newHistory = [data, ...pixHistory.filter(item => item.pixKey !== data.pixKey || item.name !== data.name)];
+    // Limita a 5 itens
+    const limitedHistory = newHistory.slice(0, 5);
+    setPixHistory(limitedHistory);
+    localStorage.setItem('kasper_pix_history', JSON.stringify(limitedHistory));
+  };
+
+  const deleteFromHistory = (index) => {
+    const newHistory = pixHistory.filter((_, i) => i !== index);
+    setPixHistory(newHistory);
+    localStorage.setItem('kasper_pix_history', JSON.stringify(newHistory));
+  };
+
+  const loadFromHistory = (item) => {
+    setPixData(item);
+    setError(''); // Limpa erros ao carregar
+  };
 
   // Mapeamento dos modos
   const modes = [
@@ -37,6 +140,7 @@ export default function Home() {
     { id: 'wifi', label: 'Wi-Fi' },
     { id: 'text', label: 'Texto' },
     { id: 'email', label: 'E-mail' },
+    { id: 'pix', label: 'Pix' }, // Novo Modo
   ];
 
   // Verifica se o campo atual está vazio
@@ -46,26 +150,21 @@ export default function Home() {
       case 'text': return !textData.trim();
       case 'wifi': return !wifiData.ssid.trim();
       case 'email': return !emailData.to.trim();
+      case 'pix': return !pixData.pixKey.trim() || !pixData.name.trim() || !pixData.city.trim();
       default: return true;
     }
   };
 
-  // Funções de formatação de conteúdo para QR Code
   const formatContent = () => {
     switch (mode) {
       case 'link':
         let url = linkData.trim().toLowerCase(); 
-        if (!url.includes('.')) {
-          url += '.com';
-        }
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          url = 'https://' + url;
-        }
+        if (!url.includes('.')) url += '.com';
+        if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
         return url;
 
       case 'wifi':
-        const securityType = wifiData.security || 'WPA';
-        return `WIFI:T:${securityType};S:${wifiData.ssid};P:${wifiData.password};;`;
+        return `WIFI:T:${wifiData.security || 'WPA'};S:${wifiData.ssid};P:${wifiData.password};;`;
 
       case 'text':
         return textData;
@@ -73,43 +172,46 @@ export default function Home() {
       case 'email':
         return `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
         
+      case 'pix':
+        // Salva no histórico antes de gerar
+        saveToPixHistory(pixData);
+        // Gera o payload Pix
+        return generatePixCopyPaste(pixData);
+
       default:
         return '';
     }
   };
 
-  // Função genérica para gerar
   const handleGenerate = (e, targetPath) => {
     if (e) e.preventDefault();
     setError(''); 
 
-    // 1. Validação de Vazio
     if (isContentEmpty()) {
-      setError('Por favor, preencha as informações principais.');
+      setError('Por favor, preencha as informações obrigatórias.');
       return;
     }
 
-    const content = formatContent();
-
-    // 2. Validação de Tamanho (Anti-Lorem Ipsum)
-    if (content.length > MAX_LENGTH) {
-      setError(`O conteúdo é muito longo (${content.length} caracteres). O limite é de ${MAX_LENGTH} para garantir a compatibilidade.`);
-      return;
+    if (mode === 'link') {
+        // Validação de tamanho
+        if (linkData.length > MAX_LENGTH) {
+            setError(`Texto muito longo.`);
+            return;
+        }
     }
 
-    // 3. Validação/Correção de E-mail
     if (mode === 'email' && !emailData.to.includes('@')) {
       setPendingTargetPath(targetPath); 
       setShowEmailModal(true); 
       return; 
     }
     
-    // Validação extra de segurança para Wi-Fi
     if (mode === 'wifi' && (!wifiData.ssid || !wifiData.security)) {
       setError("Nome da rede é obrigatório.");
       return;
     }
     
+    const content = formatContent();
     const encodedContent = encodeURIComponent(content);
     
     if (targetPath === 'full') {
@@ -121,7 +223,6 @@ export default function Home() {
 
   const handleProviderSelect = (suffix) => {
     const newEmail = emailData.to + suffix;
-    
     const finalEmailLink = `mailto:${newEmail}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
     const encoded = encodeURIComponent(finalEmailLink);
     
@@ -222,6 +323,65 @@ export default function Home() {
           </>
         );
 
+      case 'pix':
+        return (
+          <div className="pix-wrapper">
+            <div className="pix-form-area">
+                <input
+                  type="text"
+                  value={pixData.pixKey}
+                  onChange={(e) => setPixData({ ...pixData, pixKey: e.target.value })}
+                  placeholder="Chave Pix (CPF, CNPJ, Email, Tel ou Aleatória)"
+                  className="url-input"
+                  required
+                />
+                <input
+                  type="text"
+                  value={pixData.name}
+                  onChange={(e) => setPixData({ ...pixData, name: e.target.value })}
+                  placeholder="Nome do Beneficiário (Sem acentos)"
+                  className="url-input"
+                  required
+                />
+                <input
+                  type="text"
+                  value={pixData.city}
+                  onChange={(e) => setPixData({ ...pixData, city: e.target.value })}
+                  placeholder="Cidade do Beneficiário (Sem acentos)"
+                  className="url-input"
+                  required
+                />
+                <input
+                  type="number"
+                  value={pixData.amount}
+                  onChange={(e) => setPixData({ ...pixData, amount: e.target.value })}
+                  placeholder="Valor (Opcional - ex: 10.50)"
+                  className="url-input"
+                  step="0.01"
+                />
+                <input
+                  type="text"
+                  value={pixData.txid}
+                  onChange={(e) => setPixData({ ...pixData, txid: e.target.value })}
+                  placeholder="Identificador (Opcional - ex: PAGAMENTO01)"
+                  className="url-input"
+                />
+            </div>
+            
+            {/* Guia Lateral */}
+            <div className="pix-guide-box">
+                <h4>Guia Rápido Pix</h4>
+                <ul>
+                    <li><b>Chave:</b> Insira apenas números para CPF/CNPJ/Tel.</li>
+                    <li><b>Nome:</b> Use o nome exato da conta bancária. Evite acentos.</li>
+                    <li><b>Cidade:</b> Cidade da conta bancária.</li>
+                    <li><b>Valor:</b> Use ponto para centavos (ex: 1.50). Se deixar vazio, o pagador define.</li>
+                    <li><b>TxID:</b> Código único para você identificar o pagamento.</li>
+                </ul>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -231,7 +391,7 @@ export default function Home() {
     <div className="container">
       <Head>
         <title>Gerador Qr | Kasper-Labs</title>
-        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, Wi-Fi, Texto e E-mail." />
+        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, Wi-Fi, Texto, E-mail e Pix." />
       </Head>
 
       <h1 className="kasper-logo">
@@ -252,15 +412,12 @@ export default function Home() {
       </div>
 
       {/* Formulário de Input */}
-      <form className="qr-form">
+      <form className="qr-form" style={mode === 'pix' ? { maxWidth: '800px' } : {}}>
         {renderForm()}
         
-        {/* Mensagem de Erro (se houver) */}
         {error && <div className="error-msg">{error}</div>}
 
-        {/* Grupo de Botões de Ação */}
-        <div style={{ display: 'flex', gap: '1rem', width: '100%', flexDirection: 'column' }}>
-          
+        <div style={{ display: 'flex', gap: '1rem', width: '100%', flexDirection: 'column', marginTop: '1rem' }}>
           <button onClick={(e) => handleGenerate(e, 'full')} className="submit-button">
             Criar QR Code (Personalizável)
           </button>
@@ -276,8 +433,27 @@ export default function Home() {
           >
             Criar QR Code (Rápido)
           </button>
-
         </div>
+
+        {/* Histórico Pix (Apenas se estiver no modo Pix) */}
+        {mode === 'pix' && pixHistory.length > 0 && (
+            <div className="pix-history-area">
+                <div className="history-title">Histórico Salvo (Local)</div>
+                <div className="history-list">
+                    {pixHistory.map((item, idx) => (
+                        <div key={idx} className="history-item">
+                            <div className="history-content" onClick={() => loadFromHistory(item)}>
+                                <span className="history-key">{item.pixKey}</span>
+                                <span className="history-meta">{item.name} - R$ {item.amount || 'Livre'}</span>
+                            </div>
+                            <button className="history-delete-btn" onClick={() => deleteFromHistory(idx)} title="Remover">
+                                &times;
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )}
       </form>
 
       {/* Link Conheça o Projeto */}
@@ -294,13 +470,12 @@ export default function Home() {
         </a>
       </div>
 
-      {/* --- MODAL DE SELEÇÃO DE EMAIL --- */}
+      {/* Modal de Email */}
       {showEmailModal && (
         <div className="email-modal-overlay">
           <div className="email-modal">
             <h3>Finalize seu E-mail</h3>
             <p>Você digitou "{emailData.to}". Escolha um provedor para completar:</p>
-            
             <div className="provider-grid">
               {EMAIL_PROVIDERS.map((provider) => (
                 <button 
@@ -312,7 +487,6 @@ export default function Home() {
                 </button>
               ))}
             </div>
-
             <button className="close-modal-btn" onClick={() => setShowEmailModal(false)}>
               Cancelar
             </button>

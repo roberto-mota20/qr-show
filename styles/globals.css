@@ -641,3 +641,123 @@ a:hover {
   text-decoration: underline;
   font-size: 0.9rem;
 }
+
+/* --- ESTILOS PIX --- */
+
+.pix-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .pix-wrapper {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+/* Área do Formulário Pix (Esquerda) */
+.pix-form-area {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Área do Guia (Direita) */
+.pix-guide-box {
+  flex: 1;
+  background-color: #111;
+  border: 1px dashed #333;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.8rem;
+  color: #ccc;
+  min-width: 200px;
+}
+
+.pix-guide-box h4 {
+  color: #007aff;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-family: 'Lexend', sans-serif;
+}
+
+.pix-guide-box ul {
+  padding-left: 1.2rem;
+  margin: 0;
+}
+
+.pix-guide-box li {
+  margin-bottom: 0.3rem;
+}
+
+/* Área do Histórico */
+.pix-history-area {
+  width: 100%;
+  margin-top: 2rem;
+  border-top: 1px solid #333;
+  padding-top: 1rem;
+}
+
+.history-title {
+  font-size: 1rem;
+  color: #007aff;
+  margin-bottom: 1rem;
+  font-family: 'Lexend', sans-serif;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-item {
+  background-color: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.history-item:hover {
+  border-color: #555;
+}
+
+.history-content {
+  cursor: pointer;
+  flex: 1;
+  text-align: left;
+}
+
+.history-key {
+  color: #fff;
+  font-weight: bold;
+  display: block;
+}
+
+.history-meta {
+  color: #888;
+  font-size: 0.75rem;
+}
+
+.history-delete-btn {
+  background: none;
+  border: none;
+  color: #ff453a;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  margin-left: 1rem;
+}
+
+.history-delete-btn:hover {
+  color: #ff0000;
+}
