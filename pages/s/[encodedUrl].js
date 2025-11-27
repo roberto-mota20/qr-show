@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
-importHc from 'next/head';
+import Head from 'next/head'; // Corrigido aqui!
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
 
