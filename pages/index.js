@@ -15,14 +15,12 @@ const MAX_LENGTH = 2048;
 
 // --- FUNÇÕES AUXILIARES PARA O PIX ---
 
-// Função para formatar os campos do Pix (ID + Tamanho + Valor)
 const formatPixField = (id, value) => {
   const val = value.toString();
   const len = val.length.toString().padStart(2, '0');
   return `${id}${len}${val}`;
 };
 
-// Função para calcular o CRC16 (Padrão CCITT-FALSE)
 const calculateCRC16 = (payload) => {
   let crc = 0xFFFF;
   const polynomial = 0x1021;
@@ -40,72 +38,99 @@ const calculateCRC16 = (payload) => {
   return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
 };
 
-// Função Principal que Gera o Código Pix Copia e Cola
 const generatePixCopyPaste = ({ pixKey, name, city, amount, txid }) => {
-  // Tratamento dos dados
   const key = pixKey.trim();
-  // Remove acentos e caracteres especiais para compatibilidade máxima (padrão EMV safe)
   const safeName = name.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 25);
   const safeCity = city.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 15);
-  const safeTxid = txid.trim() || '***'; // Padrão se vazio é ***
+  const safeTxid = txid.trim() || '***'; 
   
-  // Se houver valor, formata (ex: 10.00). Se não, não inclui o campo.
   let amountField = '';
   if (amount) {
     const formattedAmount = parseFloat(amount.replace(',', '.')).toFixed(2);
     amountField = formatPixField('54', formattedAmount);
   }
 
-  // Montagem do Payload
   let payload = [
-    formatPixField('00', '01'), // Payload Format Indicator
-    formatPixField('26', // Merchant Account Information
-      formatPixField('00', 'BR.GOV.BCB.PIX') + // GUI
-      formatPixField('01', key) // Chave
+    formatPixField('00', '01'), 
+    formatPixField('26', 
+      formatPixField('00', 'BR.GOV.BCB.PIX') + 
+      formatPixField('01', key) 
     ),
-    formatPixField('52', '0000'), // Merchant Category Code
-    formatPixField('53', '986'), // Transaction Currency (BRL)
-    amountField, // Transaction Amount (Opcional)
-    formatPixField('58', 'BR'), // Country Code
-    formatPixField('59', safeName), // Merchant Name
-    formatPixField('60', safeCity), // Merchant City
-    formatPixField('62', // Additional Data Field
-      formatPixField('05', safeTxid) // Reference Label (TxID)
+    formatPixField('52', '0000'), 
+    formatPixField('53', '986'), 
+    amountField, 
+    formatPixField('58', 'BR'), 
+    formatPixField('59', safeName), 
+    formatPixField('60', safeCity), 
+    formatPixField('62', 
+      formatPixField('05', safeTxid) 
     )
   ].join('');
 
-  // Adiciona o ID do CRC16 '63' e o tamanho '04'
   payload += '6304';
-
-  // Calcula e adiciona o CRC
   payload += calculateCRC16(payload);
 
   return payload;
+};
+
+// --- PARSER DE IMPORTAÇÃO PIX (EMV MPM) ---
+const parseImportedPix = (raw) => {
+  const data = { pixKey: '', name: '', city: '', amount: '', txid: '' };
+  
+  try {
+    // Função auxiliar para encontrar valor pelo ID
+    const getValue = (id, source = raw) => {
+      const idx = source.indexOf(id);
+      if (idx === -1) return null;
+      const len = parseInt(source.substring(idx + 2, idx + 4));
+      return source.substring(idx + 4, idx + 4 + len);
+    };
+
+    // Extração básica
+    data.name = getValue('59') || '';
+    data.city = getValue('60') || '';
+    data.amount = getValue('54') || '';
+    
+    // Extração complexa da Chave (ID 26 -> ID 01)
+    const merchantAccount = getValue('26');
+    if (merchantAccount) {
+      data.pixKey = getValue('01', merchantAccount) || '';
+    }
+
+    // Extração do TxID (ID 62 -> ID 05)
+    const additionalData = getValue('62');
+    if (additionalData) {
+      data.txid = getValue('05', additionalData) || '';
+    }
+
+    return data;
+  } catch (e) {
+    return null;
+  }
 };
 
 
 export default function Home() {
   const router = useRouter();
   
-  // Estado para controlar o tipo de QR Code
   const [mode, setMode] = useState('link'); // link | wifi | text | email | pix
 
-  // Estados dos dados dos formulários
+  // Inputs Comuns
   const [linkData, setLinkData] = useState('');
   const [textData, setTextData] = useState('');
   const [emailData, setEmailData] = useState({ to: '', subject: '', body: '' });
   const [wifiData, setWifiData] = useState({ ssid: '', password: '', security: 'WPA' });
   
-  // Estado do PIX
+  // Inputs PIX
+  const [pixTab, setPixTab] = useState('import'); // 'manual' | 'import'
+  const [importString, setImportString] = useState(''); // String colada
   const [pixData, setPixData] = useState({ pixKey: '', name: '', city: '', amount: '', txid: '' });
   const [pixHistory, setPixHistory] = useState([]);
 
-  // Estados de Validação e UI
   const [error, setError] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [pendingTargetPath, setPendingTargetPath] = useState('full'); 
 
-  // Carregar histórico do LocalStorage ao iniciar
   useEffect(() => {
     const savedHistory = localStorage.getItem('kasper_pix_history');
     if (savedHistory) {
@@ -113,11 +138,11 @@ export default function Home() {
     }
   }, []);
 
-  // Salvar no histórico
-  const saveToPixHistory = (data) => {
-    // Evita duplicatas exatas no topo
-    const newHistory = [data, ...pixHistory.filter(item => item.pixKey !== data.pixKey || item.name !== data.name)];
-    // Limita a 5 itens
+  // Salvar no histórico (com flag de importado)
+  const saveToPixHistory = (data, isImported = false) => {
+    const newItem = { ...data, isImported };
+    // Filtra duplicatas
+    const newHistory = [newItem, ...pixHistory.filter(item => item.pixKey !== data.pixKey || item.name !== data.name)];
     const limitedHistory = newHistory.slice(0, 5);
     setPixHistory(limitedHistory);
     localStorage.setItem('kasper_pix_history', JSON.stringify(limitedHistory));
@@ -131,26 +156,27 @@ export default function Home() {
 
   const loadFromHistory = (item) => {
     setPixData(item);
-    setError(''); // Limpa erros ao carregar
+    setPixTab('manual'); // Muda para aba manual para ver os dados carregados
+    setError('');
   };
 
-  // Mapeamento dos modos
   const modes = [
     { id: 'link', label: 'Link' },
     { id: 'wifi', label: 'Wi-Fi' },
     { id: 'text', label: 'Texto' },
     { id: 'email', label: 'E-mail' },
-    { id: 'pix', label: 'Pix' }, // Novo Modo
+    { id: 'pix', label: 'Pix' }, 
   ];
 
-  // Verifica se o campo atual está vazio
   const isContentEmpty = () => {
     switch (mode) {
       case 'link': return !linkData.trim();
       case 'text': return !textData.trim();
       case 'wifi': return !wifiData.ssid.trim();
       case 'email': return !emailData.to.trim();
-      case 'pix': return !pixData.pixKey.trim() || !pixData.name.trim() || !pixData.city.trim();
+      case 'pix': 
+        if (pixTab === 'import') return !importString.trim();
+        return !pixData.pixKey.trim() || !pixData.name.trim() || !pixData.city.trim();
       default: return true;
     }
   };
@@ -173,10 +199,20 @@ export default function Home() {
         return `mailto:${emailData.to}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
         
       case 'pix':
-        // Salva no histórico antes de gerar
-        saveToPixHistory(pixData);
-        // Gera o payload Pix
-        return generatePixCopyPaste(pixData);
+        if (pixTab === 'import') {
+            // Se for importação, parseia, salva e retorna a string original
+            const parsed = parseImportedPix(importString);
+            if (parsed && parsed.name) {
+                saveToPixHistory(parsed, true); // True para importado
+                return importString; // Usa a string original do banco
+            } else {
+                throw new Error("Código Pix inválido");
+            }
+        } else {
+            // Manual
+            saveToPixHistory(pixData, false);
+            return generatePixCopyPaste(pixData);
+        }
 
       default:
         return '';
@@ -193,7 +229,6 @@ export default function Home() {
     }
 
     if (mode === 'link') {
-        // Validação de tamanho
         if (linkData.length > MAX_LENGTH) {
             setError(`Texto muito longo.`);
             return;
@@ -211,13 +246,17 @@ export default function Home() {
       return;
     }
     
-    const content = formatContent();
-    const encodedContent = encodeURIComponent(content);
-    
-    if (targetPath === 'full') {
-       router.push(`/full/${encodedContent}`);
-    } else {
-       router.push(`/${encodedContent}`);
+    try {
+        const content = formatContent();
+        const encodedContent = encodeURIComponent(content);
+        
+        if (targetPath === 'full') {
+           router.push(`/full/${encodedContent}`);
+        } else {
+           router.push(`/${encodedContent}`);
+        }
+    } catch (err) {
+        setError("Erro ao processar código Pix. Verifique se ele está completo.");
     }
   };
 
@@ -236,7 +275,6 @@ export default function Home() {
     }
   };
 
-  // Renderização dos Formulários
   const renderForm = () => {
     switch (mode) {
       case 'link':
@@ -327,57 +365,98 @@ export default function Home() {
         return (
           <div className="pix-wrapper">
             <div className="pix-form-area">
-                <input
-                  type="text"
-                  value={pixData.pixKey}
-                  onChange={(e) => setPixData({ ...pixData, pixKey: e.target.value })}
-                  placeholder="Chave Pix (CPF, CNPJ, Email, Tel ou Aleatória)"
-                  className="url-input"
-                  required
-                />
-                <input
-                  type="text"
-                  value={pixData.name}
-                  onChange={(e) => setPixData({ ...pixData, name: e.target.value })}
-                  placeholder="Nome do Beneficiário (Sem acentos)"
-                  className="url-input"
-                  required
-                />
-                <input
-                  type="text"
-                  value={pixData.city}
-                  onChange={(e) => setPixData({ ...pixData, city: e.target.value })}
-                  placeholder="Cidade do Beneficiário (Sem acentos)"
-                  className="url-input"
-                  required
-                />
-                <input
-                  type="number"
-                  value={pixData.amount}
-                  onChange={(e) => setPixData({ ...pixData, amount: e.target.value })}
-                  placeholder="Valor (Opcional - ex: 10.50)"
-                  className="url-input"
-                  step="0.01"
-                />
-                <input
-                  type="text"
-                  value={pixData.txid}
-                  onChange={(e) => setPixData({ ...pixData, txid: e.target.value })}
-                  placeholder="Identificador (Opcional - ex: PAGAMENTO01)"
-                  className="url-input"
-                />
+                
+                {/* Abas */}
+                <div className="pix-tabs">
+                    <button 
+                        className={`pix-tab-btn ${pixTab === 'import' ? 'active' : ''}`}
+                        onClick={() => { setPixTab('import'); setError(''); }}
+                        type="button"
+                    >
+                        📥 Importar (Recomendado)
+                    </button>
+                    <button 
+                        className={`pix-tab-btn ${pixTab === 'manual' ? 'active' : ''}`}
+                        onClick={() => { setPixTab('manual'); setError(''); }}
+                        type="button"
+                    >
+                        ✏️ Manual
+                    </button>
+                </div>
+
+                {pixTab === 'import' ? (
+                    <div className="import-area">
+                        <textarea
+                            value={importString}
+                            onChange={(e) => setImportString(e.target.value)}
+                            placeholder="Cole aqui o código 'Pix Copia e Cola' gerado pelo seu banco (começa com 000201...)"
+                        />
+                        <p className="import-note">
+                            Nós extrairemos os dados automaticamente para o seu histórico.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <input
+                        type="text"
+                        value={pixData.pixKey}
+                        onChange={(e) => setPixData({ ...pixData, pixKey: e.target.value })}
+                        placeholder="Chave Pix (CPF, CNPJ, Email, Tel ou Aleatória)"
+                        className="url-input"
+                        required
+                        />
+                        <input
+                        type="text"
+                        value={pixData.name}
+                        onChange={(e) => setPixData({ ...pixData, name: e.target.value })}
+                        placeholder="Nome do Beneficiário (Sem acentos)"
+                        className="url-input"
+                        required
+                        />
+                        <input
+                        type="text"
+                        value={pixData.city}
+                        onChange={(e) => setPixData({ ...pixData, city: e.target.value })}
+                        placeholder="Cidade do Beneficiário (Sem acentos)"
+                        className="url-input"
+                        required
+                        />
+                        <input
+                        type="number"
+                        value={pixData.amount}
+                        onChange={(e) => setPixData({ ...pixData, amount: e.target.value })}
+                        placeholder="Valor (Opcional - ex: 10.50)"
+                        className="url-input"
+                        step="0.01"
+                        />
+                        <input
+                        type="text"
+                        value={pixData.txid}
+                        onChange={(e) => setPixData({ ...pixData, txid: e.target.value })}
+                        placeholder="Identificador (Opcional - ex: PAGAMENTO01)"
+                        className="url-input"
+                        />
+                    </>
+                )}
             </div>
             
             {/* Guia Lateral */}
             <div className="pix-guide-box">
                 <h4>Guia Rápido Pix</h4>
-                <ul>
-                    <li><b>Chave:</b> Insira apenas números para CPF/CNPJ/Tel.</li>
-                    <li><b>Nome:</b> Use o nome exato da conta bancária. Evite acentos.</li>
-                    <li><b>Cidade:</b> Cidade da conta bancária.</li>
-                    <li><b>Valor:</b> Use ponto para centavos (ex: 1.50). Se deixar vazio, o pagador define.</li>
-                    <li><b>TxID:</b> Código único para você identificar o pagamento.</li>
-                </ul>
+                {pixTab === 'import' ? (
+                    <ul>
+                        <li><b>Importar:</b> A forma mais segura de garantir que o QR Code funcionará.</li>
+                        <li><b>Como fazer:</b> Abra o app do seu banco, crie um QR Code de cobrança e escolha "Copiar Código".</li>
+                        <li><b>Colar:</b> Cole o código gigante aqui. O sistema entenderá tudo.</li>
+                    </ul>
+                ) : (
+                    <ul>
+                        <li><b>Chave:</b> Insira apenas números para CPF/CNPJ/Tel.</li>
+                        <li><b>Nome:</b> Use o nome exato da conta bancária. Evite acentos.</li>
+                        <li><b>Cidade:</b> Cidade da conta bancária.</li>
+                        <li><b>Valor:</b> Use ponto para centavos (ex: 1.50).</li>
+                    </ul>
+                )}
             </div>
           </div>
         );
@@ -398,7 +477,6 @@ export default function Home() {
         &lt;/kasper-<span className="blue-text">labs</span>&gt;
       </h1>
 
-      {/* Seletor de Modo */}
       <div className="mode-selector">
         {modes.map((m) => (
           <button
@@ -411,7 +489,6 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Formulário de Input */}
       <form className="qr-form" style={mode === 'pix' ? { maxWidth: '800px' } : {}}>
         {renderForm()}
         
@@ -435,7 +512,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Histórico Pix (Apenas se estiver no modo Pix) */}
+        {/* Histórico Pix */}
         {mode === 'pix' && pixHistory.length > 0 && (
             <div className="pix-history-area">
                 <div className="history-title">Histórico Salvo (Local)</div>
@@ -443,10 +520,13 @@ export default function Home() {
                     {pixHistory.map((item, idx) => (
                         <div key={idx} className="history-item">
                             <div className="history-content" onClick={() => loadFromHistory(item)}>
-                                <span className="history-key">{item.pixKey}</span>
-                                <span className="history-meta">{item.name} - R$ {item.amount || 'Livre'}</span>
+                                <div className="history-header">
+                                    <span className="history-key">{item.pixKey || 'Chave Desconhecida'}</span>
+                                    {item.isImported && <span className="import-tag">Oficial</span>}
+                                </div>
+                                <span className="history-meta">{item.name} - {item.amount ? `R$ ${item.amount}` : 'Valor Livre'}</span>
                             </div>
-                            <button className="history-delete-btn" onClick={() => deleteFromHistory(idx)} title="Remover">
+                            <button className="history-delete-btn" onClick={(e) => { e.preventDefault(); deleteFromHistory(idx); }} title="Remover">
                                 &times;
                             </button>
                         </div>
@@ -456,7 +536,6 @@ export default function Home() {
         )}
       </form>
 
-      {/* Link Conheça o Projeto */}
       <div style={{ marginTop: '2rem', fontSize: '0.9rem' }}>
         <a 
           href="https://www.kasper-labs.com" 
@@ -470,7 +549,6 @@ export default function Home() {
         </a>
       </div>
 
-      {/* Modal de Email */}
       {showEmailModal && (
         <div className="email-modal-overlay">
           <div className="email-modal">

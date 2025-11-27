@@ -666,6 +666,52 @@ a:hover {
   gap: 0.8rem;
 }
 
+/* Abas do Modo Pix */
+.pix-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pix-tab-btn {
+  flex: 1;
+  background: #111;
+  border: 1px solid #333;
+  color: #888;
+  padding: 0.5rem;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.pix-tab-btn.active {
+  background: #007aff;
+  color: #fff;
+  border-color: #007aff;
+  font-weight: bold;
+}
+
+.import-area textarea {
+  width: 100%;
+  background-color: #111;
+  border: 1px dashed #007aff;
+  color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.import-note {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
 /* Área do Guia (Direita) */
 .pix-guide-box {
   flex: 1;
@@ -735,6 +781,23 @@ a:hover {
   cursor: pointer;
   flex: 1;
   text-align: left;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Tag de Importação Oficial */
+.import-tag {
+  background-color: #34C759;
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
 .history-key {
