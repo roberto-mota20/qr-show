@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
 
@@ -20,6 +20,8 @@ const CORNER_STYLES = [
   { id: 'rounded', label: 'Redondo' },
   { id: 'dot', label: 'Ponto' },
 ];
+
+const MAX_LENGTH = 2048; // Limite de segurança
 
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
@@ -138,6 +140,13 @@ export default function QrCodePage() {
     if (encodedUrl) {
       try {
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
+        let rawContent = rawArray.join('/');
+
+        // Verifica tamanho excessivo antes de processar
+        if (rawContent.length > MAX_LENGTH) {
+            router.replace('/404');
+            return;
+        }
         
         if (rawArray.length > 1) {
             let reconstructed = rawArray.join('/');
@@ -147,8 +156,14 @@ export default function QrCodePage() {
             return;
         }
 
-        const rawContent = rawArray[0];
-        const content = decodeURIComponent(rawContent);
+        const content = decodeURIComponent(rawArray[0]);
+        
+        // Verifica tamanho após decodificar também
+        if (content.length > MAX_LENGTH) {
+            router.replace('/404');
+            return;
+        }
+
         setDecodedContent(content);
         
         if (qrInstance) {
@@ -207,10 +222,15 @@ export default function QrCodePage() {
     </div>
   );
 
+  // Define o título da página dinamicamente
+  const pageTitle = decodedContent 
+    ? `qr.kasper-labs.com | ${decodedContent.substring(0, 30)}${decodedContent.length > 30 ? '...' : ''}`
+    : 'Editor QR | Kasper-Labs';
+
   return (
     <div className="container">
       <Head>
-        <title>Editor QR | Kasper-Labs</title>
+        <title>{pageTitle}</title>
       </Head>
 
       {/* Logo linkada para a Home */}

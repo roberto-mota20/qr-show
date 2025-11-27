@@ -11,6 +11,9 @@ const EMAIL_PROVIDERS = [
   '@yahoo.com'
 ];
 
+// Limite seguro para URLs (maioria dos navegadores suporta até 2048)
+const MAX_LENGTH = 2048;
+
 export default function Home() {
   const router = useRouter();
   
@@ -51,15 +54,10 @@ export default function Home() {
   const formatContent = () => {
     switch (mode) {
       case 'link':
-        // Lógica de Autocorreção de URL
-        let url = linkData.trim().toLowerCase(); // Tudo minúsculo
-        
-        // Se não tiver ponto (indicando TLD como .com, .br), adiciona .com
+        let url = linkData.trim().toLowerCase(); 
         if (!url.includes('.')) {
           url += '.com';
         }
-        
-        // Se não tiver protocolo, adiciona https://
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
           url = 'https://' + url;
         }
@@ -83,7 +81,7 @@ export default function Home() {
   // Função genérica para gerar
   const handleGenerate = (e, targetPath) => {
     if (e) e.preventDefault();
-    setError(''); // Limpa erros anteriores
+    setError(''); 
 
     // 1. Validação de Vazio
     if (isContentEmpty()) {
@@ -91,14 +89,20 @@ export default function Home() {
       return;
     }
 
-    // 2. Validação/Correção de E-mail
-    if (mode === 'email' && !emailData.to.includes('@')) {
-      setPendingTargetPath(targetPath); // Salva se o usuário queria ir pro Full ou Simple
-      setShowEmailModal(true); // Abre o modal para escolher provedor
-      return; // Para a execução aqui
+    const content = formatContent();
+
+    // 2. Validação de Tamanho (Anti-Lorem Ipsum)
+    if (content.length > MAX_LENGTH) {
+      setError(`O conteúdo é muito longo (${content.length} caracteres). O limite é de ${MAX_LENGTH} para garantir a compatibilidade.`);
+      return;
     }
 
-    const content = formatContent();
+    // 3. Validação/Correção de E-mail
+    if (mode === 'email' && !emailData.to.includes('@')) {
+      setPendingTargetPath(targetPath); 
+      setShowEmailModal(true); 
+      return; 
+    }
     
     // Validação extra de segurança para Wi-Fi
     if (mode === 'wifi' && (!wifiData.ssid || !wifiData.security)) {
@@ -115,20 +119,15 @@ export default function Home() {
     }
   };
 
-  // Função chamada ao clicar num provedor de email no Modal
   const handleProviderSelect = (suffix) => {
-    // Atualiza o email com o provedor escolhido
     const newEmail = emailData.to + suffix;
     
-    // Calcula o link final manualmente aqui para não depender do delay do 'setState'
     const finalEmailLink = `mailto:${newEmail}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
     const encoded = encodeURIComponent(finalEmailLink);
     
-    // Fecha modal e atualiza estado visualmente
     setEmailData({ ...emailData, to: newEmail });
     setShowEmailModal(false);
     
-    // Redireciona usando o caminho que estava pendente
     if (pendingTargetPath === 'full') {
        router.push(`/full/${encoded}`);
     } else {
@@ -199,7 +198,7 @@ export default function Home() {
         return (
           <>
             <input
-              type="text" // text para permitir digitar sem @ inicialmente
+              type="text" 
               value={emailData.to}
               onChange={(e) => setEmailData({ ...emailData, to: e.target.value })}
               placeholder="E-mail de Destino (ex: contato)"
@@ -262,12 +261,10 @@ export default function Home() {
         {/* Grupo de Botões de Ação */}
         <div style={{ display: 'flex', gap: '1rem', width: '100%', flexDirection: 'column' }}>
           
-          {/* Botão Principal */}
           <button onClick={(e) => handleGenerate(e, 'full')} className="submit-button">
             Criar QR Code (Personalizável)
           </button>
 
-          {/* Botão Secundário */}
           <button 
             onClick={(e) => handleGenerate(e, 'simple')} 
             className="submit-button"

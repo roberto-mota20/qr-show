@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
 import Head from 'next/head';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
 import QRCodeStyling from 'qr-code-styling';
 
 const qrOptions = {
@@ -13,6 +13,8 @@ const qrOptions = {
   cornersSquareOptions: { color: '#000000', type: 'square' },
   imageOptions: { crossOrigin: 'anonymous', margin: 4 }
 };
+
+const MAX_LENGTH = 2048; // Limite de segurança
 
 export default function SimpleQrCodePage() {
   const router = useRouter();
@@ -40,7 +42,18 @@ export default function SimpleQrCodePage() {
     if (encodedUrl) {
       try {
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
+        let rawContent = rawArray.join('/'); // Junta para verificar o tamanho total original
         
+        // Verifica se a URL é absurdamente grande antes de qualquer correção
+        // Como o navegador já decodifica parte da URL ao quebrar em array,
+        // verificamos o tamanho aproximado da remontagem.
+        if (rawContent.length > MAX_LENGTH) {
+            console.warn("URL excedeu o limite de tamanho.");
+            router.replace('/404');
+            return;
+        }
+
+        // Correção de protocolo se necessário
         if (rawArray.length > 1) {
           let reconstructed = rawArray.join('/');
           reconstructed = reconstructed.replace(/^(https?):\/([^\/])/, '$1://$2');
@@ -49,8 +62,14 @@ export default function SimpleQrCodePage() {
           return;
         }
 
-        let rawContent = rawArray[0]; 
+        rawContent = rawArray[0]; 
         const content = decodeURIComponent(rawContent);
+
+        // Validação final do conteúdo decodificado
+        if (content.length > MAX_LENGTH) {
+            router.replace('/404');
+            return;
+        }
 
         setDecodedContent(content);
         if (qrInstance) qrInstance.update({ data: content });
@@ -62,10 +81,15 @@ export default function SimpleQrCodePage() {
     }
   }, [encodedUrl, qrInstance, router]);
 
+  // Define o título da página. Usa slice para não ficar gigante na aba se for texto.
+  const pageTitle = decodedContent 
+    ? `qr.kasper-labs.com | ${decodedContent.substring(0, 30)}${decodedContent.length > 30 ? '...' : ''}`
+    : 'QR Code | Kasper-Labs';
+
   return (
     <div className="container">
       <Head>
-        <title>QR Code | Kasper-Labs</title>
+        <title>{pageTitle}</title>
       </Head>
 
       {/* Logo linkada para a Home */}
