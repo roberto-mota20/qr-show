@@ -73,38 +73,54 @@ const generatePixCopyPaste = ({ pixKey, name, city, amount, txid }) => {
   return payload;
 };
 
-// --- PARSER DE IMPORTAÇÃO PIX (EMV MPM) ---
+// --- PARSER DE IMPORTAÇÃO PIX (EMV MPM ROBUSTO) ---
+// Função que lê a string sequencialmente (ID -> TAMANHO -> VALOR)
+const parseEmv = (str) => {
+  let i = 0;
+  const result = {};
+  while (i < str.length) {
+    if (i + 4 > str.length) break; // Proteção contra fim de string
+    const id = str.substring(i, i + 2);
+    const lenStr = str.substring(i + 2, i + 4);
+    
+    // Verifica se o tamanho é numérico
+    if (!/^\d+$/.test(lenStr)) break;
+    
+    const len = parseInt(lenStr, 10);
+    if (i + 4 + len > str.length) break; // Proteção de tamanho
+    
+    const val = str.substring(i + 4, i + 4 + len);
+    result[id] = val;
+    i += 4 + len;
+  }
+  return result;
+};
+
 const parseImportedPix = (raw) => {
-  const data = { pixKey: '', name: '', city: '', amount: '', txid: '' };
-  
   try {
-    // Função auxiliar para encontrar valor pelo ID
-    const getValue = (id, source = raw) => {
-      const idx = source.indexOf(id);
-      if (idx === -1) return null;
-      const len = parseInt(source.substring(idx + 2, idx + 4));
-      return source.substring(idx + 4, idx + 4 + len);
-    };
+    const root = parseEmv(raw);
+    const data = { pixKey: '', name: '', city: '', amount: '', txid: '' };
 
     // Extração básica
-    data.name = getValue('59') || '';
-    data.city = getValue('60') || '';
-    data.amount = getValue('54') || '';
-    
-    // Extração complexa da Chave (ID 26 -> ID 01)
-    const merchantAccount = getValue('26');
-    if (merchantAccount) {
-      data.pixKey = getValue('01', merchantAccount) || '';
+    data.name = root['59'] || '';
+    data.city = root['60'] || '';
+    data.amount = root['54'] || ''; // Valor opcional
+
+    // Extração da Chave (Dentro do ID 26)
+    if (root['26']) {
+      const merchantAccount = parseEmv(root['26']);
+      data.pixKey = merchantAccount['01'] || '';
     }
 
-    // Extração do TxID (ID 62 -> ID 05)
-    const additionalData = getValue('62');
-    if (additionalData) {
-      data.txid = getValue('05', additionalData) || '';
+    // Extração do TxID (Dentro do ID 62)
+    if (root['62']) {
+      const additionalData = parseEmv(root['62']);
+      data.txid = additionalData['05'] || '';
     }
 
     return data;
   } catch (e) {
+    console.error("Erro no parser:", e);
     return null;
   }
 };
@@ -200,11 +216,11 @@ export default function Home() {
         
       case 'pix':
         if (pixTab === 'import') {
-            // Se for importação, parseia, salva e retorna a string original
+            // Parser Robusto
             const parsed = parseImportedPix(importString);
-            if (parsed && parsed.name) {
-                saveToPixHistory(parsed, true); // True para importado
-                return importString; // Usa a string original do banco
+            if (parsed && parsed.name && parsed.pixKey) {
+                saveToPixHistory(parsed, true); 
+                return importString; // Usa a string original fiel
             } else {
                 throw new Error("Código Pix inválido");
             }
@@ -256,7 +272,7 @@ export default function Home() {
            router.push(`/${encodedContent}`);
         }
     } catch (err) {
-        setError("Erro ao processar código Pix. Verifique se ele está completo.");
+        setError("Erro ao processar. Verifique se os dados estão corretos.");
     }
   };
 
@@ -373,14 +389,14 @@ export default function Home() {
                         onClick={() => { setPixTab('import'); setError(''); }}
                         type="button"
                     >
-                        📥 Importar (Recomendado)
+                        Importar (Recomendado)
                     </button>
                     <button 
                         className={`pix-tab-btn ${pixTab === 'manual' ? 'active' : ''}`}
                         onClick={() => { setPixTab('manual'); setError(''); }}
                         type="button"
                     >
-                        ✏️ Manual
+                        Manual
                     </button>
                 </div>
 

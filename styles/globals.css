@@ -642,7 +642,7 @@ a:hover {
   font-size: 0.9rem;
 }
 
-/* --- ESTILOS PIX --- */
+/* --- ESTILOS PIX (ATUALIZADO) --- */
 
 .pix-wrapper {
   display: flex;
@@ -655,6 +655,7 @@ a:hover {
   .pix-wrapper {
     flex-direction: row;
     align-items: flex-start;
+    flex-wrap: wrap; /* Permitir quebra de linha se necessário */
   }
 }
 
@@ -664,6 +665,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  min-width: 300px; /* Garante tamanho mínimo */
 }
 
 /* Abas do Modo Pix */
@@ -704,6 +706,7 @@ a:hover {
   font-size: 0.8rem;
   resize: vertical;
   min-height: 120px;
+  box-sizing: border-box; /* Importante para não estourar */
 }
 
 .import-note {
@@ -722,7 +725,8 @@ a:hover {
   text-align: left;
   font-size: 0.8rem;
   color: #ccc;
-  min-width: 200px;
+  min-width: 250px; /* Aumentado para evitar texto espremido */
+  flex-shrink: 0; /* Tenta não encolher */
 }
 
 .pix-guide-box h4 {
