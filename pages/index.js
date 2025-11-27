@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
+const EMAIL_PROVIDERS = [
+  '@gmail.com',
+  '@outlook.com',
+  '@hotmail.com',
+  '@icloud.com',
+  '@proton.me',
+  '@yahoo.com'
+];
+
 export default function Home() {
   const router = useRouter();
   
@@ -14,7 +23,12 @@ export default function Home() {
   const [emailData, setEmailData] = useState({ to: '', subject: '', body: '' });
   const [wifiData, setWifiData] = useState({ ssid: '', password: '', security: 'WPA' });
 
-  // Mapeamento dos modos para facilitar a renderização
+  // Estados de Validação e UI
+  const [error, setError] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [pendingTargetPath, setPendingTargetPath] = useState('full'); // Para lembrar onde ir após o modal
+
+  // Mapeamento dos modos
   const modes = [
     { id: 'link', label: 'Link' },
     { id: 'wifi', label: 'Wi-Fi' },
@@ -22,15 +36,34 @@ export default function Home() {
     { id: 'email', label: 'E-mail' },
   ];
 
+  // Verifica se o campo atual está vazio
+  const isContentEmpty = () => {
+    switch (mode) {
+      case 'link': return !linkData.trim();
+      case 'text': return !textData.trim();
+      case 'wifi': return !wifiData.ssid.trim();
+      case 'email': return !emailData.to.trim();
+      default: return true;
+    }
+  };
+
   // Funções de formatação de conteúdo para QR Code
   const formatContent = () => {
     switch (mode) {
       case 'link':
-        let finalUrl = linkData.trim();
-        if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-          finalUrl = 'https://' + finalUrl;
+        // Lógica de Autocorreção de URL
+        let url = linkData.trim().toLowerCase(); // Tudo minúsculo
+        
+        // Se não tiver ponto (indicando TLD como .com, .br), adiciona .com
+        if (!url.includes('.')) {
+          url += '.com';
         }
-        return finalUrl;
+        
+        // Se não tiver protocolo, adiciona https://
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        return url;
 
       case 'wifi':
         const securityType = wifiData.security || 'WPA';
@@ -47,23 +80,59 @@ export default function Home() {
     }
   };
 
-  // Função genérica para gerar (recebe o destino como argumento)
+  // Função genérica para gerar
   const handleGenerate = (e, targetPath) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    setError(''); // Limpa erros anteriores
+
+    // 1. Validação de Vazio
+    if (isContentEmpty()) {
+      setError('Por favor, preencha as informações principais.');
+      return;
+    }
+
+    // 2. Validação/Correção de E-mail
+    if (mode === 'email' && !emailData.to.includes('@')) {
+      setPendingTargetPath(targetPath); // Salva se o usuário queria ir pro Full ou Simple
+      setShowEmailModal(true); // Abre o modal para escolher provedor
+      return; // Para a execução aqui
+    }
+
     const content = formatContent();
     
-    if (!content || (mode === 'wifi' && (!wifiData.ssid || !wifiData.security))) {
-      console.error("Conteúdo vazio ou incompleto.");
+    // Validação extra de segurança para Wi-Fi
+    if (mode === 'wifi' && (!wifiData.ssid || !wifiData.security)) {
+      setError("Nome da rede é obrigatório.");
       return;
     }
     
-    // Codifica o conteúdo
     const encodedContent = encodeURIComponent(content);
     
     if (targetPath === 'full') {
        router.push(`/full/${encodedContent}`);
     } else {
        router.push(`/${encodedContent}`);
+    }
+  };
+
+  // Função chamada ao clicar num provedor de email no Modal
+  const handleProviderSelect = (suffix) => {
+    // Atualiza o email com o provedor escolhido
+    const newEmail = emailData.to + suffix;
+    
+    // Calcula o link final manualmente aqui para não depender do delay do 'setState'
+    const finalEmailLink = `mailto:${newEmail}?subject=${encodeURIComponent(emailData.subject)}&body=${encodeURIComponent(emailData.body)}`;
+    const encoded = encodeURIComponent(finalEmailLink);
+    
+    // Fecha modal e atualiza estado visualmente
+    setEmailData({ ...emailData, to: newEmail });
+    setShowEmailModal(false);
+    
+    // Redireciona usando o caminho que estava pendente
+    if (pendingTargetPath === 'full') {
+       router.push(`/full/${encoded}`);
+    } else {
+       router.push(`/${encoded}`);
     }
   };
 
@@ -76,7 +145,7 @@ export default function Home() {
             type="text"
             value={linkData}
             onChange={(e) => setLinkData(e.target.value)}
-            placeholder="Cole sua URL aqui (ex: kasper-labs.com)"
+            placeholder="URL (ex: google)"
             className="url-input"
             required
           />
@@ -130,10 +199,10 @@ export default function Home() {
         return (
           <>
             <input
-              type="email"
+              type="text" // text para permitir digitar sem @ inicialmente
               value={emailData.to}
               onChange={(e) => setEmailData({ ...emailData, to: e.target.value })}
-              placeholder="E-mail de Destino"
+              placeholder="E-mail de Destino (ex: contato)"
               className="url-input"
               required
             />
@@ -176,7 +245,7 @@ export default function Home() {
           <button
             key={m.id}
             className={`mode-button ${m.id === mode ? 'active' : ''}`}
-            onClick={() => setMode(m.id)}
+            onClick={() => { setMode(m.id); setError(''); }}
           >
             {m.label}
           </button>
@@ -187,15 +256,18 @@ export default function Home() {
       <form className="qr-form">
         {renderForm()}
         
+        {/* Mensagem de Erro (se houver) */}
+        {error && <div className="error-msg">{error}</div>}
+
         {/* Grupo de Botões de Ação */}
         <div style={{ display: 'flex', gap: '1rem', width: '100%', flexDirection: 'column' }}>
           
-          {/* Botão para Modo Completo (Destaque) */}
+          {/* Botão Principal */}
           <button onClick={(e) => handleGenerate(e, 'full')} className="submit-button">
             Criar QR Code (Personalizável)
           </button>
 
-          {/* Botão para Modo Simples (Secundário) */}
+          {/* Botão Secundário */}
           <button 
             onClick={(e) => handleGenerate(e, 'simple')} 
             className="submit-button"
@@ -211,7 +283,7 @@ export default function Home() {
         </div>
       </form>
 
-      {/* Ajustado: Removida a classe 'project-link' que dava estilo de botão e adicionado estilo simples */}
+      {/* Link Conheça o Projeto */}
       <div style={{ marginTop: '2rem', fontSize: '0.9rem' }}>
         <a 
           href="https://www.kasper-labs.com" 
@@ -224,6 +296,33 @@ export default function Home() {
           Conheça o projeto
         </a>
       </div>
+
+      {/* --- MODAL DE SELEÇÃO DE EMAIL --- */}
+      {showEmailModal && (
+        <div className="email-modal-overlay">
+          <div className="email-modal">
+            <h3>Finalize seu E-mail</h3>
+            <p>Você digitou "{emailData.to}". Escolha um provedor para completar:</p>
+            
+            <div className="provider-grid">
+              {EMAIL_PROVIDERS.map((provider) => (
+                <button 
+                  key={provider} 
+                  className="provider-btn"
+                  onClick={() => handleProviderSelect(provider)}
+                >
+                  {provider}
+                </button>
+              ))}
+            </div>
+
+            <button className="close-modal-btn" onClick={() => setShowEmailModal(false)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

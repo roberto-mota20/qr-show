@@ -253,13 +253,6 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Estilo específico para o link de "conheça o projeto" - BOTÃO CINZA/HIPERLINK */
-/* Agora tratado inline no index.js, mas mantendo caso use classes antigas */
-.project-link {
-  margin-top: 2rem;
-  font-size: 0.9rem;
-}
-
 /* --- NOVOS ESTILOS DE PERSONALIZAÇÃO (ACCORDION) --- */
 
 /* Coluna de Controles (centralizada por padrão) */
@@ -556,4 +549,95 @@ a:hover {
 
 .mode-toggle-link a:hover {
   color: #ffffff;
+}
+
+/* --- ALERTAS E MODAIS (NOVO) --- */
+
+/* Mensagem de Erro */
+.error-msg {
+  color: #ff453a; /* Vermelho Apple/iOS */
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal de Sugestão de Email */
+.email-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85); /* Fundo escuro focado */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.email-modal {
+  background-color: #1c1c1c;
+  border: 1px solid #007aff;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(0, 122, 255, 0.3);
+}
+
+.email-modal h3 {
+  font-family: 'Lexend', sans-serif;
+  color: #ffffff;
+  margin-top: 0;
+}
+
+.email-modal p {
+  color: #cccccc;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.provider-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.provider-btn {
+  background-color: #000000;
+  border: 1px solid #333;
+  color: #ffffff;
+  padding: 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.provider-btn:hover {
+  border-color: #007aff;
+  color: #007aff;
+  transform: translateY(-2px);
+}
+
+.close-modal-btn {
+  margin-top: 1.5rem;
+  background: none;
+  border: none;
+  color: #ff453a;
+  cursor: pointer;
+  font-family: 'Roboto Mono', monospace;
+  text-decoration: underline;
+  font-size: 0.9rem;
 }
