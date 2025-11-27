@@ -136,11 +136,14 @@ export default function QrCodePage() {
   useEffect(() => {
     if (encodedUrl) {
       try {
-        // Correção para Catch-all: encodedUrl pode ser um array ['https:', 'google.com']
-        // Juntamos com '/' para refazer a URL original
-        const rawContent = Array.isArray(encodedUrl) ? encodedUrl.join('/') : encodedUrl;
-        const content = decodeURIComponent(rawContent);
+        // --- CORREÇÃO DE URL (Mesma lógica do Simple) ---
+        const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
+        let rawContent = rawArray.join('/');
         
+        // Corrige https:/ para https://
+        rawContent = rawContent.replace(/^(https?):\/([^\/])/, '$1://$2');
+        
+        const content = decodeURIComponent(rawContent);
         setDecodedContent(content);
         
         if (qrInstance) {

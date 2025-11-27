@@ -48,9 +48,19 @@ export default function SimpleQrCodePage() {
   }, [qrInstance]);
 
   useEffect(() => {
-    if (encodedUrl && qrInstance) {
+    if (encodedUrl &&qrInstance) {
       try {
-        const content = decodeURIComponent(encodedUrl); 
+        // --- CORREÇÃO DE URL ---
+        // 1. Garante que é um array e junta com '/' para remover as vírgulas indesejadas
+        const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
+        let rawContent = rawArray.join('/');
+
+        // 2. Corrige o protocolo "https:/" para "https://" (navegadores removem uma barra na URL)
+        // Regex: Se começar com http:/ ou https:/ seguido de algo que NÃO seja barra, adiciona a barra extra
+        rawContent = rawContent.replace(/^(https?):\/([^\/])/, '$1://$2');
+
+        const content = decodeURIComponent(rawContent);
+
         setDecodedContent(content);
         qrInstance.update({ data: content });
       } catch (e) {
@@ -79,9 +89,9 @@ export default function SimpleQrCodePage() {
         </div>
       </div>
       
-      {/* Link para o modo de edição (agora em /s/) */}
+      {/* Link para o modo completo (agora em /full/) */}
       <p className="mode-toggle-link">
-        Você está no modo simplificado. Para editar, acesse o <a href={`/s/${encodedUrl}`}>modo completo</a>.
+        Você está no modo simplificado. Para editar, acesse o <a href={`/full/${encodeURIComponent(decodedContent)}`}>modo completo</a>.
       </p>
     </div>
   );
