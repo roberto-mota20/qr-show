@@ -12,10 +12,10 @@ import PixMode from '../components/modes/PixMode';
 import VCardMode from '../components/modes/VCardMode';
 import MessageMode from '../components/modes/MessageMode';
 import WhatsAppMode from '../components/modes/WhatsAppMode';
-import BitcoinMode from '../components/modes/BitcoinMode'; // Novo Import
+import BitcoinMode from '../components/modes/BitcoinMode';
+import EventMode from '../components/modes/EventMode'; // Novo Import
 import SimpleMarkdown from '../components/SimpleMarkdown';
 
-// Função que roda no servidor (Build time) para ler o arquivo MD
 export async function getStaticProps() {
   const filePath = path.join(process.cwd(), 'content', 'explainer.md');
   let explainerContent = '';
@@ -44,10 +44,11 @@ export default function Home({ explainerContent }) {
     { id: 'wifi', label: 'Wi-Fi' },
     { id: 'text', label: 'Texto' },
     { id: 'email', label: 'E-mail' },
-    { id: 'message', label: 'SMS' },
+    { id: 'event', label: 'Evento' }, // Novo Botão
     { id: 'vcard', label: 'vCard' },
+    { id: 'message', label: 'SMS' },
     { id: 'pix', label: 'Pix' },
-    { id: 'bitcoin', label: 'Bitcoin' }, // Novo Botão
+    { id: 'bitcoin', label: 'Bitcoin' },
   ];
 
   const renderModule = () => {
@@ -60,7 +61,8 @@ export default function Home({ explainerContent }) {
       case 'pix': return <PixMode />;
       case 'vcard': return <VCardMode />;
       case 'message': return <MessageMode />;
-      case 'bitcoin': return <BitcoinMode />; // Renderiza
+      case 'bitcoin': return <BitcoinMode />;
+      case 'event': return <EventMode />; // Renderiza
       default: return null;
     }
   };
@@ -69,7 +71,7 @@ export default function Home({ explainerContent }) {
     <div className="container">
       <Head>
         <title>Gerador Qr | Kasper-Labs</title>
-        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, WhatsApp, Bitcoin, vCard, Wi-Fi, Texto e Pix." />
+        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, WhatsApp, Eventos, vCard, Pix e mais." />
       </Head>
 
       <h1 className="kasper-logo">
@@ -89,7 +91,7 @@ export default function Home({ explainerContent }) {
       </div>
 
       {/* Renderiza o Módulo Ativo */}
-      <form className="qr-form" style={mode === 'pix' || mode === 'vcard' || mode === 'bitcoin' ? { maxWidth: '800px' } : {}}>
+      <form className="qr-form" style={mode === 'pix' || mode === 'vcard' || mode === 'event' || mode === 'bitcoin' ? { maxWidth: '800px' } : {}}>
         {renderModule()}
       </form>
 

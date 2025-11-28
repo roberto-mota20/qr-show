@@ -24,11 +24,37 @@ const CORNER_STYLES = [
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
   
-  // Bitcoin Detection (BIP 21)
+  // Event Detection (VEVENT)
+  if (content.includes('BEGIN:VEVENT')) {
+      const getField = (regex) => {
+        const match = content.match(regex);
+        return match ? match[1].trim() : '';
+      };
+      
+      // Formata data YYYYMMDDTHHMMSS -> DD/MM/YYYY HH:MM
+      const formatDate = (raw) => {
+          if (!raw || raw.length < 15) return raw;
+          const year = raw.substring(0, 4);
+          const month = raw.substring(4, 6);
+          const day = raw.substring(6, 8);
+          const hour = raw.substring(9, 11);
+          const min = raw.substring(11, 13);
+          return `${day}/${month}/${year} às ${hour}:${min}`;
+      };
+
+      const details = {
+        summary: getField(/SUMMARY:(.*)/),
+        location: getField(/LOCATION:(.*)/),
+        start: formatDate(getField(/DTSTART:(.*)/)),
+        end: formatDate(getField(/DTEND:(.*)/)),
+        description: getField(/DESCRIPTION:(.*)/)
+      };
+      return { type: 'Evento de Calendário', details };
+  }
+
+  // Bitcoin Detection
   if (content.startsWith('bitcoin:')) {
-      // Remove o prefixo
       const raw = content.substring(8);
-      // Separa endereço dos parâmetros
       const [addressPart, queryPart] = raw.split('?');
       let details = { address: addressPart };
       
@@ -60,7 +86,7 @@ const parseQrContent = (content) => {
       return { type: 'WhatsApp', details: { phone, message } };
   }
 
-  // Detecção de Mensagem SMS (SMSTO: ou SMS:)
+  // Mensagem SMS
   if (content.startsWith('SMSTO:') || content.startsWith('SMS:')) {
       const parts = content.split(':');
       const phone = parts[1];
@@ -68,7 +94,7 @@ const parseQrContent = (content) => {
       return { type: 'Mensagem SMS', details: { phone, message } };
   }
 
-  // vCard Detection
+  // vCard
   if (content.startsWith('BEGIN:VCARD')) {
       const getField = (regex) => {
         const match = content.match(regex);
@@ -85,7 +111,7 @@ const parseQrContent = (content) => {
       return { type: 'vCard (Contato)', details };
   }
 
-  // Pix Detection
+  // Pix
   if (content.startsWith('000201')) {
       let name = 'N/A';
       let amount = 'Livre';
@@ -141,6 +167,18 @@ const ContentDetails = ({ content }) => {
 
   let detailContent;
   switch (type) {
+    case 'Evento de Calendário':
+      detailContent = ( 
+        <div className="detail-group"> 
+            <Title text="Evento" /> 
+            <DetailItem label="Título" value={details.summary} /> 
+            <DetailItem label="Início" value={details.start} /> 
+            <DetailItem label="Fim" value={details.end || 'N/A'} />
+            <DetailItem label="Local" value={details.location || 'N/A'} />
+            <DetailItem label="Descrição" value={details.description || 'N/A'} />
+        </div> 
+      );
+      break;
     case 'Bitcoin':
       detailContent = ( 
         <div className="detail-group"> 
@@ -148,7 +186,6 @@ const ContentDetails = ({ content }) => {
             <DetailItem label="Endereço" value={details.address} /> 
             <DetailItem label="Quantia" value={details.amount ? `${details.amount} BTC` : 'Livre'} /> 
             <DetailItem label="Etiqueta" value={details.label || 'N/A'} />
-            <DetailItem label="Mensagem" value={details.message || 'N/A'} />
         </div> 
       );
       break;
@@ -264,7 +301,6 @@ export default function QrCodePage() {
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
         let rawContent = rawArray.join('/');
 
-        // Verifica tamanho excessivo antes de processar
         const MAX_LENGTH = 2048;
         if (rawContent.length > MAX_LENGTH) {
             router.replace('/404');
@@ -355,7 +391,6 @@ export default function QrCodePage() {
         <title>{pageTitle}</title>
       </Head>
 
-      {/* Logo linkada para a Home */}
       <Link href="/" style={{ textDecoration: 'none' }}>
         <h1 className="kasper-logo" style={{ cursor: 'pointer' }}>
           &lt;/kasper-<span className="blue-text">labs</span>&gt;

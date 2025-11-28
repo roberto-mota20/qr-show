@@ -43,6 +43,7 @@ describe('Página Inicial (Gerador de QR Code)', () => {
     expect(screen.getByText('vCard')).toBeInTheDocument();
     expect(screen.getByText('Pix')).toBeInTheDocument();
     expect(screen.getByText('Bitcoin')).toBeInTheDocument();
+    expect(screen.getByText('Evento')).toBeInTheDocument();
   });
 
   // --- TESTES DE LINK ---
@@ -165,6 +166,32 @@ describe('Página Inicial (Gerador de QR Code)', () => {
 
     expect(screen.getByText(/endereço parece muito curto/i)).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  // --- TESTES DE EVENTO (NOVO) ---
+  it('Modo Evento: deve gerar evento de calendário corretamente', async () => {
+    render(<Home explainerContent="" />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Evento'));
+
+    // Preenche título
+    await user.type(screen.getByPlaceholderText(/Título do Evento/i), 'Festa da Firma');
+    
+    // Seleciona uma data (input type="datetime-local")
+    // Em testes, pode ser mais fácil simular o valor direto
+    const dateInput = document.querySelector('input[type="datetime-local"]');
+    fireEvent.change(dateInput, { target: { value: '2023-12-25T20:00' } });
+
+    await user.click(screen.getByText('Criar QR Code (Personalizável)'));
+
+    const callArgs = pushMock.mock.calls[0][0];
+    const decoded = decodeURIComponent(callArgs);
+    
+    expect(decoded).toContain('BEGIN:VEVENT');
+    expect(decoded).toContain('SUMMARY:Festa da Firma');
+    // Verifica se a data foi formatada (removidos - e :)
+    expect(decoded).toContain('DTSTART:20231225T200000');
   });
 
 });
