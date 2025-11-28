@@ -258,6 +258,34 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Estilo específico para o link de "conheça o projeto" - BOTÃO CINZA/HIPERLINK */
+.project-link {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+}
+
+.project-link a {
+  /* Estilo de Botão Cinza/Soft Black */
+  font-family: 'Roboto Mono', monospace; 
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #1c1c1c; /* Preto Suave/Cinza */
+  color: #007aff; /* Azul Claro */
+  border: 1px solid #007aff; /* Borda Azul */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.project-link a:hover {
+  background-color: #007aff;
+  color: #ffffff;
+  text-decoration: none;
+}
+
 /* --- NOVOS ESTILOS DE PERSONALIZAÇÃO (ACCORDION) --- */
 
 /* Coluna de Controles (centralizada por padrão) */
@@ -556,7 +584,7 @@ a:hover {
   color: #ffffff;
 }
 
-/* --- ALERTAS E MODAIS (Renomeado de Email para Picker para ser genérico) --- */
+/* --- ALERTAS E MODAIS (NOVO) --- */
 
 /* Mensagem de Erro */
 .error-msg {
@@ -916,56 +944,52 @@ a:hover {
   color: #ff0000;
 }
 
-/* --- ESTILOS VCARD --- */
-.vcard-wrapper {
+/* --- ESTILOS VCARD e BITCOIN e EVENTO --- */
+
+.vcard-wrapper, .bitcoin-wrapper {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
 }
 
-.vcard-form-area {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-/* Colocar inputs lado a lado se houver espaço */
-.form-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-@media (min-width: 600px) {
-  .form-row {
-    flex-direction: row;
-  }
-}
-
-/* Área do Histórico vCard */
-.vcard-history-area {
-  width: 100%;
-  margin-top: 2rem;
-  border-top: 1px solid #333;
-  padding-top: 1rem;
-}
-
-/* --- ESTILOS BITCOIN --- */
-.bitcoin-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-}
-
-.bitcoin-form-area {
+.vcard-form-area, .bitcoin-form-area {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
 }
 
 .bitcoin-history-area {
+  width: 100%;
+  margin-top: 2rem;
+  border-top: 1px solid #333;
+  padding-top: 1rem;
+}
+
+/* --- CORREÇÃO: Grid/Colunas para Formulários --- */
+/* Colocar inputs lado a lado se houver espaço (usado em vCard, Evento) */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .form-row {
+    flex-direction: row;
+    flex-wrap: wrap; /* CORREÇÃO: Permite quebra de linha */
+  }
+  
+  /* CORREÇÃO: Garante largura mínima para não espremer os inputs */
+  .form-row > * {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+/* Área do Histórico vCard */
+.vcard-history-area {
   width: 100%;
   margin-top: 2rem;
   border-top: 1px solid #333;
