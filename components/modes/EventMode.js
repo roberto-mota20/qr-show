@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+// Removido import do useRouter para evitar erros de build no ambiente de preview
+// import { useRouter } from 'next/router';
 
 export default function EventMode() {
-  const router = useRouter();
+  // const router = useRouter();
   
   const [data, setData] = useState({
     title: '',
@@ -52,10 +53,11 @@ export default function EventMode() {
     const finalString = content.join('\n');
     const encoded = encodeURIComponent(finalString);
     
+    // Uso de window.location para garantir compatibilidade com o preview
     if (targetPath === 'full') {
-       router.push(`/full/${encoded}`);
+       window.location.href = `/full/${encoded}`;
     } else {
-       router.push(`/${encoded}`);
+       window.location.href = `/${encoded}`;
     }
   };
 
@@ -79,8 +81,12 @@ export default function EventMode() {
             className="url-input" 
         />
 
+        {/* CORREÇÃO AQUI: 
+            Adicionado minWidth: 0 nos elementos filhos do flex.
+            Isso previne que inputs largos (como data) estoquem o container.
+        */}
         <div className="form-row" style={{marginTop: '1rem'}}>
-            <div style={{flex: 1}}>
+            <div style={{flex: 1, minWidth: 0}}>
                 <label style={{color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem'}}>Início</label>
                 <input 
                     type="datetime-local" 
@@ -90,7 +96,7 @@ export default function EventMode() {
                     required 
                 />
             </div>
-            <div style={{flex: 1}}>
+            <div style={{flex: 1, minWidth: 0}}>
                 <label style={{color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem'}}>Fim (Opcional)</label>
                 <input 
                     type="datetime-local" 
