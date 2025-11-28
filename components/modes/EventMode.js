@@ -1,6 +1,5 @@
 import { useState } from 'react';
-// Removido import do useRouter para evitar erros de build no ambiente de preview
-// import { useRouter } from 'next/router';
+// import { useRouter } from 'next/router'; // Comentado para evitar erro de build no preview
 
 export default function EventMode() {
   // const router = useRouter();
@@ -53,7 +52,7 @@ export default function EventMode() {
     const finalString = content.join('\n');
     const encoded = encodeURIComponent(finalString);
     
-    // Uso de window.location para garantir compatibilidade com o preview
+    // Uso de window.location para contornar o erro de build "Could not resolve next/router"
     if (targetPath === 'full') {
        window.location.href = `/full/${encoded}`;
     } else {
@@ -81,13 +80,16 @@ export default function EventMode() {
             className="url-input" 
         />
 
-        {/* CORREÇÃO DO LAYOUT:
-            Removido o 'minWidth: 0' anterior que causava o vazamento.
-            Definido 'minWidth: 250px' para garantir espaço suficiente para o calendário.
-            Se a tela for menor que 2 colunas de 250px + gap, o flex-wrap do CSS global jogará um para baixo.
+        {/* CORREÇÃO DE LAYOUT:
+            'flex: 1 1 250px' cria um grid responsivo robusto.
+            - Grow (1): Ocupa espaço extra.
+            - Shrink (1): Permite encolher até a base.
+            - Basis (250px): Garante largura mínima para o calendário nativo. 
+              Se a largura total for < 500px, os inputs empilham (wrap) automaticamente,
+              eliminando o vazamento horizontal visto na imagem.
         */}
-        <div className="form-row" style={{marginTop: '1rem'}}>
-            <div style={{flex: 1, minWidth: '250px'}}>
+        <div className="form-row" style={{marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '1rem'}}>
+            <div style={{flex: '1 1 250px'}}>
                 <label style={{color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem'}}>Início</label>
                 <input 
                     type="datetime-local" 
@@ -97,7 +99,7 @@ export default function EventMode() {
                     required 
                 />
             </div>
-            <div style={{flex: 1, minWidth: '250px'}}>
+            <div style={{flex: '1 1 250px'}}>
                 <label style={{color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem'}}>Fim (Opcional)</label>
                 <input 
                     type="datetime-local" 
