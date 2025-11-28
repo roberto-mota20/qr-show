@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
+import { parseVCard } from '../../utils/vcard'; // Importar se necessário, ou usar lógica inline aqui
 
 // Tipos de estilos disponíveis para seleção
 const DOT_STYLES = [
@@ -26,16 +27,28 @@ const MAX_LENGTH = 2048;
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
   
-  // Detecção de PIX (EMV QRCPS-MPM começa com 000201)
+  // vCard Detection
+  if (content.startsWith('BEGIN:VCARD')) {
+      const getField = (regex) => {
+        const match = content.match(regex);
+        return match ? match[1].trim() : '';
+      };
+      
+      const details = {
+        fn: getField(/FN:(.*)/),
+        org: getField(/ORG:(.*)/),
+        title: getField(/TITLE:(.*)/),
+        tel: getField(/TEL.*:(.*)/),
+        email: getField(/EMAIL:(.*)/)
+      };
+      return { type: 'vCard (Contato)', details };
+  }
+
+  // Pix Detection
   if (content.startsWith('000201')) {
-      // Extração básica (muito simplificada para exibição)
-      // O ideal seria um parser EMV completo, mas vamos tentar achar o Nome e Valor por ID
+      // Extração básica para exibição
       let name = 'N/A';
       let amount = 'Livre';
-      
-      // Tenta achar merchant name (ID 59)
-      const nameMatch = content.match(/59(\d{2})([^0-9]+)/); // Simplificado
-      // Uma busca mais robusta por IDs
       try {
           const idxName = content.indexOf('59');
           if (idxName > -1) {
@@ -48,7 +61,6 @@ const parseQrContent = (content) => {
              amount = 'R$ ' + content.substring(idxAmount + 4, idxAmount + 4 + len);
           }
       } catch (e) {}
-
       return { type: 'Pix (Pagamento)', details: { name, amount, raw: content } };
   }
 
@@ -89,6 +101,18 @@ const ContentDetails = ({ content }) => {
 
   let detailContent;
   switch (type) {
+    case 'vCard (Contato)':
+      detailContent = ( 
+        <div className="detail-group"> 
+            <Title text="Cartão de Visita Digital" /> 
+            <DetailItem label="Nome" value={details.fn} /> 
+            <DetailItem label="Empresa" value={details.org || 'N/A'} />
+            <DetailItem label="Cargo" value={details.title || 'N/A'} />
+            <DetailItem label="Telefone" value={details.tel || 'N/A'} />
+            <DetailItem label="E-mail" value={details.email || 'N/A'} />
+        </div> 
+      );
+      break;
     case 'Pix (Pagamento)':
       detailContent = ( <div className="detail-group"> <Title text="Pagamento Pix" /> <DetailItem label="Beneficiário" value={details.name} /> <DetailItem label="Valor" value={details.amount} /> <div style={{marginTop: '10px', fontSize: '0.8rem', color: '#555', wordBreak: 'break-all'}}>{details.raw.substring(0, 50)}...</div> </div> );
       break;
@@ -171,6 +195,7 @@ export default function QrCodePage() {
         const rawArray = Array.isArray(encodedUrl) ? encodedUrl : [encodedUrl];
         let rawContent = rawArray.join('/');
 
+        // Verifica tamanho excessivo antes de processar
         if (rawContent.length > MAX_LENGTH) {
             router.replace('/404');
             return;
@@ -186,6 +211,7 @@ export default function QrCodePage() {
 
         const content = decodeURIComponent(rawArray[0]);
         
+        // Verifica tamanho após decodificar também
         if (content.length > MAX_LENGTH) {
             router.replace('/404');
             return;
@@ -249,11 +275,9 @@ export default function QrCodePage() {
     </div>
   );
 
-  const isPix = decodedContent && decodedContent.startsWith('000201');
-  const displayTitle = isPix ? 'Pix Copia e Cola' : decodedContent;
-
+  // Define o título da página dinamicamente
   const pageTitle = decodedContent 
-    ? `qr.kasper-labs.com | ${displayTitle.substring(0, 30)}${displayTitle.length > 30 ? '...' : ''}`
+    ? `qr.kasper-labs.com | ${decodedContent.substring(0, 30)}${decodedContent.length > 30 ? '...' : ''}`
     : 'Editor QR | Kasper-Labs';
 
   return (
@@ -262,6 +286,7 @@ export default function QrCodePage() {
         <title>{pageTitle}</title>
       </Head>
 
+      {/* Logo linkada para a Home */}
       <Link href="/" style={{ textDecoration: 'none' }}>
         <h1 className="kasper-logo" style={{ cursor: 'pointer' }}>
           &lt;/kasper-<span className="blue-text">labs</span>&gt;

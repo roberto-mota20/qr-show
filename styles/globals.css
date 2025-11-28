@@ -647,7 +647,7 @@ a:hover {
   font-size: 0.9rem;
 }
 
-/* --- ESTILOS PIX (ATUALIZADO) --- */
+/* --- ESTILOS PIX --- */
 
 .pix-wrapper {
   display: flex;
@@ -832,6 +832,42 @@ a:hover {
 
 .history-delete-btn:hover {
   color: #ff0000;
+}
+
+/* --- ESTILOS VCARD (ATUALIZADO) --- */
+
+.vcard-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.vcard-form-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* Colocar inputs lado a lado se houver espaço */
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+@media (min-width: 600px) {
+  .form-row {
+    flex-direction: row;
+  }
+}
+
+/* Área do Histórico vCard */
+.vcard-history-area {
+  width: 100%;
+  margin-top: 2rem;
+  border-top: 1px solid #333;
+  padding-top: 1rem;
 }
 
 /* --- ESTILOS DA SEÇÃO EXPLICATIVA (MARKDOWN) --- */

@@ -9,6 +9,7 @@ import WifiMode from '../components/modes/WifiMode';
 import TextMode from '../components/modes/TextMode';
 import EmailMode from '../components/modes/EmailMode';
 import PixMode from '../components/modes/PixMode';
+import VCardMode from '../components/modes/VCardMode'; // Importado
 import SimpleMarkdown from '../components/SimpleMarkdown';
 
 // Função que roda no servidor (Build time) para ler o arquivo MD
@@ -32,13 +33,14 @@ export async function getStaticProps() {
 
 export default function Home({ explainerContent }) {
   const [mode, setMode] = useState('link');
-  const [showExplainer, setShowExplainer] = useState(false); // Estado para controlar o colapso
+  const [showExplainer, setShowExplainer] = useState(false);
 
   const modes = [
     { id: 'link', label: 'Link' },
     { id: 'wifi', label: 'Wi-Fi' },
     { id: 'text', label: 'Texto' },
     { id: 'email', label: 'E-mail' },
+    { id: 'vcard', label: 'vCard' }, // Novo Botão
     { id: 'pix', label: 'Pix' },
   ];
 
@@ -49,6 +51,7 @@ export default function Home({ explainerContent }) {
       case 'text': return <TextMode />;
       case 'email': return <EmailMode />;
       case 'pix': return <PixMode />;
+      case 'vcard': return <VCardMode />; // Renderiza
       default: return null;
     }
   };
@@ -57,7 +60,7 @@ export default function Home({ explainerContent }) {
     <div className="container">
       <Head>
         <title>Gerador Qr | Kasper-Labs</title>
-        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, Wi-Fi, Texto, E-mail e Pix." />
+        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, vCard, Wi-Fi, Texto, E-mail e Pix." />
       </Head>
 
       <h1 className="kasper-logo">
@@ -77,7 +80,7 @@ export default function Home({ explainerContent }) {
       </div>
 
       {/* Renderiza o Módulo Ativo */}
-      <form className="qr-form" style={mode === 'pix' ? { maxWidth: '800px' } : {}}>
+      <form className="qr-form" style={mode === 'pix' || mode === 'vcard' ? { maxWidth: '800px' } : {}}>
         {renderModule()}
       </form>
 
