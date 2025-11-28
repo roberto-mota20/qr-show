@@ -11,22 +11,22 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.4.1",
+    "@vercel/speed-insights": "^1.2.0",
+    "html2canvas": "^1.4.1",
     "next": "14.2.4",
+    "qr-code-styling": "^1.6.0",
     "qrcode": "^1.5.3",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "html2canvas": "^1.4.1",
-    "qr-code-styling": "^1.6.0",
-    "@vercel/analytics": "^1.4.1",
-    "@vercel/speed-insights": "^1.0.10"
+    "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.2.0",
+    "@testing-library/user-event": "^14.5.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.4",
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "@testing-library/react": "^14.2.0",
-    "@testing-library/jest-dom": "^6.4.0",
-    "@testing-library/user-event": "^14.5.0"
+    "jest-environment-jsdom": "^29.7.0"
   }
 }
