@@ -1,9 +1,10 @@
 import '../styles/globals.css';
 import Head from 'next/head';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 // Componente principal que envolve todas as páginas.
-// É aqui que importamos o CSS global e agora o Analytics.
+// É aqui que importamos o CSS global e agora o Analytics + Speed Insights.
 export default function App({ Component, pageProps }) {
   return (
     <>
@@ -14,8 +15,9 @@ export default function App({ Component, pageProps }) {
       {/* Componente da página atual */}
       <Component {...pageProps} />
       
-      {/* Componente do Vercel Analytics (invisível na tela, mas coleta os dados) */}
+      {/* Ferramentas de Monitoramento Vercel */}
       <Analytics />
+      <SpeedInsights />
     </>
   );
 }
