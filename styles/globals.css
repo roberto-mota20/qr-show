@@ -707,27 +707,6 @@ a:hover {
   resize: vertical;
   min-height: 120px;
   box-sizing: border-box; /* Importante para não estourar */
-  margin-bottom: 0.5rem;
-}
-
-/* Botão de Ação dentro da área de importação */
-.import-action-btn {
-  width: 100%;
-  padding: 0.6rem;
-  background-color: #1c1c1c;
-  border: 1px solid #007aff;
-  color: #007aff;
-  border-radius: 6px;
-  cursor: pointer;
-  font-family: 'Roboto Mono', monospace;
-  font-weight: 700;
-  transition: all 0.2s;
-  margin-top: 0.5rem;
-}
-
-.import-action-btn:hover {
-  background-color: #007aff;
-  color: white;
 }
 
 .import-note {
@@ -848,4 +827,73 @@ a:hover {
 
 .history-delete-btn:hover {
   color: #ff0000;
+}
+
+/* --- ESTILOS DA SEÇÃO EXPLICATIVA (MARKDOWN) --- */
+
+.explainer-section {
+  width: 100%;
+  max-width: 800px;
+  margin: 4rem auto 2rem auto;
+  text-align: left;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  animation: fadeIn 0.8s ease;
+}
+
+.markdown-container {
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+
+.md-h2 {
+  font-family: 'Lexend', sans-serif;
+  color: #007aff;
+  font-size: 1.8rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.5rem;
+}
+
+.md-h3 {
+  font-family: 'Lexend', sans-serif;
+  color: #ffffff;
+  font-size: 1.3rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.md-p {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  color: #cccccc;
+}
+
+.md-list {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.md-list li {
+  margin-bottom: 0.5rem;
+  color: #cccccc;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+}
+
+.md-bold {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.md-code {
+  background-color: #1c1c1c;
+  border: 1px solid #333;
+  color: #007aff;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
 }

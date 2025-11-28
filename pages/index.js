@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
+import fs from 'fs';
+import path from 'path';
 
 // Importando os Módulos
 import LinkMode from '../components/modes/LinkMode';
@@ -7,8 +9,28 @@ import WifiMode from '../components/modes/WifiMode';
 import TextMode from '../components/modes/TextMode';
 import EmailMode from '../components/modes/EmailMode';
 import PixMode from '../components/modes/PixMode';
+import SimpleMarkdown from '../components/SimpleMarkdown';
 
-export default function Home() {
+// Função que roda no servidor (Build time) para ler o arquivo MD
+export async function getStaticProps() {
+  const filePath = path.join(process.cwd(), 'content', 'explainer.md');
+  let explainerContent = '';
+
+  try {
+    explainerContent = fs.readFileSync(filePath, 'utf8');
+  } catch (err) {
+    console.error("Erro ao ler arquivo markdown:", err);
+    explainerContent = "## Erro\nNão foi possível carregar o conteúdo explicativo.";
+  }
+
+  return {
+    props: {
+      explainerContent,
+    },
+  };
+}
+
+export default function Home({ explainerContent }) {
   const [mode, setMode] = useState('link');
 
   const modes = [
@@ -58,7 +80,12 @@ export default function Home() {
         {renderModule()}
       </form>
 
-      <div style={{ marginTop: '2rem', fontSize: '0.9rem' }}>
+      {/* Seção Explicativa (Markdown) */}
+      <div className="explainer-section">
+        <SimpleMarkdown content={explainerContent} />
+      </div>
+
+      <div style={{ marginTop: '3rem', fontSize: '0.9rem', borderTop: '1px solid #333', paddingTop: '2rem', width: '100%', textAlign: 'center' }}>
         <a 
           href="https://www.kasper-labs.com" 
           target="_blank" 
