@@ -58,15 +58,15 @@ export default function EmailMode() {
             <button onClick={(e) => handleGenerate(e, 'simple')} className="submit-button" style={{ backgroundColor: 'transparent', border: '2px solid #007aff', color: '#007aff' }}>Criar QR Code (Rápido)</button>
         </div>
 
-        {/* Modal */}
+        {/* Modal Genérico */}
         {showModal && (
-            <div className="email-modal-overlay">
-            <div className="email-modal">
+            <div className="picker-modal-overlay">
+            <div className="picker-modal">
                 <h3>Finalize seu E-mail</h3>
                 <p>Você digitou "{emailData.to}". Escolha um provedor:</p>
-                <div className="provider-grid">
+                <div className="picker-grid">
                 {EMAIL_PROVIDERS.map((provider) => (
-                    <button key={provider} className="provider-btn" onClick={() => handleProviderSelect(provider)}>{provider}</button>
+                    <button key={provider} className="picker-btn" onClick={() => handleProviderSelect(provider)}>{provider}</button>
                 ))}
                 </div>
                 <button className="close-modal-btn" onClick={() => setShowModal(false)}>Cancelar</button>

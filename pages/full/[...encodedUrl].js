@@ -24,10 +24,37 @@ const CORNER_STYLES = [
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
   
+  // Detecção de WhatsApp (wa.me ou api.whatsapp.com)
+  if (content.includes('wa.me/') || content.includes('api.whatsapp.com')) {
+      let phone = '';
+      let message = '';
+      
+      try {
+          // Extrai número da URL
+          const urlObj = new URL(content.startsWith('http') ? content : `https://${content}`);
+          const pathParts = urlObj.pathname.split('/');
+          
+          // Tenta pegar do pathname (wa.me/5511...)
+          phone = pathParts[pathParts.length - 1] || '';
+          
+          // Se não achou no path, tenta query params (api.whatsapp.com/send?phone=...)
+          if (!phone || isNaN(phone)) {
+              phone = urlObj.searchParams.get('phone') || '';
+          }
+
+          message = urlObj.searchParams.get('text') || '';
+      } catch (e) {
+          // Fallback simples se URL falhar
+          const parts = content.split('/');
+          phone = parts[parts.length - 1].split('?')[0];
+      }
+
+      return { type: 'WhatsApp', details: { phone, message } };
+  }
+
   // Detecção de Mensagem SMS (SMSTO: ou SMS:)
   if (content.startsWith('SMSTO:') || content.startsWith('SMS:')) {
       const parts = content.split(':');
-      // SMSTO:NUMERO:MENSAGEM (pode haver : na mensagem, então juntamos o resto)
       const phone = parts[1];
       const message = parts.slice(2).join(':');
       return { type: 'Mensagem SMS', details: { phone, message } };
@@ -106,6 +133,15 @@ const ContentDetails = ({ content }) => {
 
   let detailContent;
   switch (type) {
+    case 'WhatsApp':
+      detailContent = ( 
+        <div className="detail-group"> 
+            <Title text="Conversa WhatsApp" /> 
+            <DetailItem label="Número" value={details.phone} /> 
+            <DetailItem label="Mensagem" value={details.message || '(Sem mensagem pré-definida)'} /> 
+        </div> 
+      );
+      break;
     case 'Mensagem SMS':
       detailContent = ( 
         <div className="detail-group"> 

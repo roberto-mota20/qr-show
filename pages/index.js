@@ -10,7 +10,8 @@ import TextMode from '../components/modes/TextMode';
 import EmailMode from '../components/modes/EmailMode';
 import PixMode from '../components/modes/PixMode';
 import VCardMode from '../components/modes/VCardMode';
-import MessageMode from '../components/modes/MessageMode'; // Novo Import
+import MessageMode from '../components/modes/MessageMode';
+import WhatsAppMode from '../components/modes/WhatsAppMode'; // Novo Import
 import SimpleMarkdown from '../components/SimpleMarkdown';
 
 // Função que roda no servidor (Build time) para ler o arquivo MD
@@ -38,10 +39,11 @@ export default function Home({ explainerContent }) {
 
   const modes = [
     { id: 'link', label: 'Link' },
+    { id: 'whatsapp', label: 'WhatsApp' }, // Novo Botão (Destaque)
     { id: 'wifi', label: 'Wi-Fi' },
     { id: 'text', label: 'Texto' },
     { id: 'email', label: 'E-mail' },
-    { id: 'message', label: 'Mensagem' }, // Novo Botão
+    { id: 'message', label: 'SMS' },
     { id: 'vcard', label: 'vCard' },
     { id: 'pix', label: 'Pix' },
   ];
@@ -49,12 +51,13 @@ export default function Home({ explainerContent }) {
   const renderModule = () => {
     switch (mode) {
       case 'link': return <LinkMode />;
+      case 'whatsapp': return <WhatsAppMode />; // Renderiza
       case 'wifi': return <WifiMode />;
       case 'text': return <TextMode />;
       case 'email': return <EmailMode />;
       case 'pix': return <PixMode />;
       case 'vcard': return <VCardMode />;
-      case 'message': return <MessageMode />; // Renderiza
+      case 'message': return <MessageMode />;
       default: return null;
     }
   };
@@ -63,7 +66,7 @@ export default function Home({ explainerContent }) {
     <div className="container">
       <Head>
         <title>Gerador Qr | Kasper-Labs</title>
-        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, vCard, Wi-Fi, Texto, E-mail, Mensagem e Pix." />
+        <meta name="description" content="Gerador de QR Code Multiuso da Kasper-Labs: Link, WhatsApp, vCard, Wi-Fi, Texto, E-mail, Mensagem e Pix." />
       </Head>
 
       <h1 className="kasper-logo">

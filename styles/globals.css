@@ -556,7 +556,7 @@ a:hover {
   color: #ffffff;
 }
 
-/* --- ALERTAS E MODAIS (NOVO) --- */
+/* --- ALERTAS E MODAIS (Renomeado de Email para Picker para ser genérico) --- */
 
 /* Mensagem de Erro */
 .error-msg {
@@ -574,8 +574,8 @@ a:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Modal de Sugestão de Email */
-.email-modal-overlay {
+/* Modal de Sugestão (Genérico) */
+.picker-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -589,7 +589,7 @@ a:hover {
   backdrop-filter: blur(5px);
 }
 
-.email-modal {
+.picker-modal {
   background-color: #1c1c1c;
   border: 1px solid #007aff;
   border-radius: 12px;
@@ -600,25 +600,25 @@ a:hover {
   box-shadow: 0 0 30px rgba(0, 122, 255, 0.3);
 }
 
-.email-modal h3 {
+.picker-modal h3 {
   font-family: 'Lexend', sans-serif;
   color: #ffffff;
   margin-top: 0;
 }
 
-.email-modal p {
+.picker-modal p {
   color: #cccccc;
   font-size: 0.9rem;
   margin-bottom: 1.5rem;
 }
 
-.provider-grid {
+.picker-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.8rem;
 }
 
-.provider-btn {
+.picker-btn {
   background-color: #000000;
   border: 1px solid #333;
   color: #ffffff;
@@ -630,7 +630,7 @@ a:hover {
   transition: all 0.2s;
 }
 
-.provider-btn:hover {
+.picker-btn:hover {
   border-color: #007aff;
   color: #007aff;
   transform: translateY(-2px);
@@ -834,7 +834,7 @@ a:hover {
   color: #ff0000;
 }
 
-/* --- ESTILOS VCARD (ATUALIZADO) --- */
+/* --- ESTILOS VCARD --- */
 
 .vcard-wrapper {
   display: flex;
