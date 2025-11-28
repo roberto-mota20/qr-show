@@ -596,8 +596,11 @@ a:hover {
   padding: 2rem;
   width: 90%;
   max-width: 400px;
+  max-height: 80vh; /* Limite de altura */
   text-align: center;
   box-shadow: 0 0 30px rgba(0, 122, 255, 0.3);
+  display: flex;
+  flex-direction: column;
 }
 
 .picker-modal h3 {
@@ -634,6 +637,85 @@ a:hover {
   border-color: #007aff;
   color: #007aff;
   transform: translateY(-2px);
+}
+
+/* Estilos Específicos para a Pesquisa de Países */
+.picker-search-input {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #000;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 8px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.picker-search-input:focus {
+  outline: none;
+  border-color: #007aff;
+}
+
+.picker-list-container {
+  overflow-y: auto;
+  max-height: 300px; /* Altura máxima da lista */
+  padding-right: 5px; /* Espaço para o scroll */
+}
+
+/* Scrollbar customizada para o modal */
+.picker-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+.picker-list-container::-webkit-scrollbar-track {
+  background: #111; 
+}
+.picker-list-container::-webkit-scrollbar-thumb {
+  background: #333; 
+  border-radius: 3px;
+}
+.picker-list-container::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+/* Grade de Países */
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.8rem;
+}
+
+.country-item {
+  background-color: #000;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0.8rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.country-item:hover {
+  border-color: #007aff;
+  transform: translateY(-2px);
+}
+
+.country-name {
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 0.2rem;
+  text-align: center;
+}
+
+.country-code {
+  color: #888;
+  font-size: 0.75rem;
+  font-family: 'Roboto Mono', monospace;
 }
 
 .close-modal-btn {
