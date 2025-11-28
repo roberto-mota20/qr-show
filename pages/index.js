@@ -32,6 +32,7 @@ export async function getStaticProps() {
 
 export default function Home({ explainerContent }) {
   const [mode, setMode] = useState('link');
+  const [showExplainer, setShowExplainer] = useState(false); // Estado para controlar o colapso
 
   const modes = [
     { id: 'link', label: 'Link' },
@@ -80,9 +81,21 @@ export default function Home({ explainerContent }) {
         {renderModule()}
       </form>
 
-      {/* Seção Explicativa (Markdown) */}
-      <div className="explainer-section">
-        <SimpleMarkdown content={explainerContent} />
+      {/* Seção Explicativa Colapsável */}
+      <div className="explainer-wrapper">
+        <button 
+          className={`explainer-toggle ${showExplainer ? 'active' : ''}`} 
+          onClick={() => setShowExplainer(!showExplainer)}
+          type="button"
+        >
+          {showExplainer ? 'Ocultar detalhes do projeto ▲' : 'Entenda como funciona ▼'}
+        </button>
+        
+        {showExplainer && (
+          <div className="explainer-content">
+            <SimpleMarkdown content={explainerContent} />
+          </div>
+        )}
       </div>
 
       <div style={{ marginTop: '3rem', fontSize: '0.9rem', borderTop: '1px solid #333', paddingTop: '2rem', width: '100%', textAlign: 'center' }}>
