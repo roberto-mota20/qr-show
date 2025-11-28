@@ -24,31 +24,39 @@ const CORNER_STYLES = [
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
   
-  // Detecção de WhatsApp (wa.me ou api.whatsapp.com)
+  // Bitcoin Detection (BIP 21)
+  if (content.startsWith('bitcoin:')) {
+      // Remove o prefixo
+      const raw = content.substring(8);
+      // Separa endereço dos parâmetros
+      const [addressPart, queryPart] = raw.split('?');
+      let details = { address: addressPart };
+      
+      if (queryPart) {
+          const params = new URLSearchParams(queryPart);
+          details.amount = params.get('amount');
+          details.label = params.get('label');
+          details.message = params.get('message');
+      }
+      return { type: 'Bitcoin', details };
+  }
+
+  // WhatsApp Detection
   if (content.includes('wa.me/') || content.includes('api.whatsapp.com')) {
       let phone = '';
       let message = '';
-      
       try {
-          // Extrai número da URL
           const urlObj = new URL(content.startsWith('http') ? content : `https://${content}`);
           const pathParts = urlObj.pathname.split('/');
-          
-          // Tenta pegar do pathname (wa.me/5511...)
           phone = pathParts[pathParts.length - 1] || '';
-          
-          // Se não achou no path, tenta query params (api.whatsapp.com/send?phone=...)
           if (!phone || isNaN(phone)) {
               phone = urlObj.searchParams.get('phone') || '';
           }
-
           message = urlObj.searchParams.get('text') || '';
       } catch (e) {
-          // Fallback simples se URL falhar
           const parts = content.split('/');
           phone = parts[parts.length - 1].split('?')[0];
       }
-
       return { type: 'WhatsApp', details: { phone, message } };
   }
 
@@ -133,6 +141,17 @@ const ContentDetails = ({ content }) => {
 
   let detailContent;
   switch (type) {
+    case 'Bitcoin':
+      detailContent = ( 
+        <div className="detail-group"> 
+            <Title text="Carteira Bitcoin" /> 
+            <DetailItem label="Endereço" value={details.address} /> 
+            <DetailItem label="Quantia" value={details.amount ? `${details.amount} BTC` : 'Livre'} /> 
+            <DetailItem label="Etiqueta" value={details.label || 'N/A'} />
+            <DetailItem label="Mensagem" value={details.message || 'N/A'} />
+        </div> 
+      );
+      break;
     case 'WhatsApp':
       detailContent = ( 
         <div className="detail-group"> 
@@ -336,6 +355,7 @@ export default function QrCodePage() {
         <title>{pageTitle}</title>
       </Head>
 
+      {/* Logo linkada para a Home */}
       <Link href="/" style={{ textDecoration: 'none' }}>
         <h1 className="kasper-logo" style={{ cursor: 'pointer' }}>
           &lt;/kasper-<span className="blue-text">labs</span>&gt;

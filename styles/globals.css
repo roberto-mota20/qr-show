@@ -917,7 +917,6 @@ a:hover {
 }
 
 /* --- ESTILOS VCARD --- */
-
 .vcard-wrapper {
   display: flex;
   flex-direction: column;
@@ -946,6 +945,27 @@ a:hover {
 
 /* Área do Histórico vCard */
 .vcard-history-area {
+  width: 100%;
+  margin-top: 2rem;
+  border-top: 1px solid #333;
+  padding-top: 1rem;
+}
+
+/* --- ESTILOS BITCOIN --- */
+.bitcoin-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.bitcoin-form-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.bitcoin-history-area {
   width: 100%;
   margin-top: 2rem;
   border-top: 1px solid #333;
