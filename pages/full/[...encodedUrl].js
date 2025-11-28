@@ -4,7 +4,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import QRCodeStyling from 'qr-code-styling';
 import html2canvas from 'html2canvas';
-import { parseVCard } from '../../utils/vcard'; // Importar se necessário, ou usar lógica inline aqui
 
 // Tipos de estilos disponíveis para seleção
 const DOT_STYLES = [
@@ -22,11 +21,18 @@ const CORNER_STYLES = [
   { id: 'dot', label: 'Ponto' },
 ];
 
-const MAX_LENGTH = 2048;
-
 const parseQrContent = (content) => {
   if (!content) return { type: 'Texto', details: { text: '' } }; 
   
+  // Detecção de Mensagem SMS (SMSTO: ou SMS:)
+  if (content.startsWith('SMSTO:') || content.startsWith('SMS:')) {
+      const parts = content.split(':');
+      // SMSTO:NUMERO:MENSAGEM (pode haver : na mensagem, então juntamos o resto)
+      const phone = parts[1];
+      const message = parts.slice(2).join(':');
+      return { type: 'Mensagem SMS', details: { phone, message } };
+  }
+
   // vCard Detection
   if (content.startsWith('BEGIN:VCARD')) {
       const getField = (regex) => {
@@ -46,7 +52,6 @@ const parseQrContent = (content) => {
 
   // Pix Detection
   if (content.startsWith('000201')) {
-      // Extração básica para exibição
       let name = 'N/A';
       let amount = 'Livre';
       try {
@@ -101,6 +106,15 @@ const ContentDetails = ({ content }) => {
 
   let detailContent;
   switch (type) {
+    case 'Mensagem SMS':
+      detailContent = ( 
+        <div className="detail-group"> 
+            <Title text="Dados da Mensagem" /> 
+            <DetailItem label="Para" value={details.phone} /> 
+            <DetailItem label="Mensagem" value={details.message} /> 
+        </div> 
+      );
+      break;
     case 'vCard (Contato)':
       detailContent = ( 
         <div className="detail-group"> 
@@ -196,6 +210,7 @@ export default function QrCodePage() {
         let rawContent = rawArray.join('/');
 
         // Verifica tamanho excessivo antes de processar
+        const MAX_LENGTH = 2048;
         if (rawContent.length > MAX_LENGTH) {
             router.replace('/404');
             return;
@@ -211,7 +226,6 @@ export default function QrCodePage() {
 
         const content = decodeURIComponent(rawArray[0]);
         
-        // Verifica tamanho após decodificar também
         if (content.length > MAX_LENGTH) {
             router.replace('/404');
             return;
@@ -286,7 +300,6 @@ export default function QrCodePage() {
         <title>{pageTitle}</title>
       </Head>
 
-      {/* Logo linkada para a Home */}
       <Link href="/" style={{ textDecoration: 'none' }}>
         <h1 className="kasper-logo" style={{ cursor: 'pointer' }}>
           &lt;/kasper-<span className="blue-text">labs</span>&gt;
