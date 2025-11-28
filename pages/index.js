@@ -44,7 +44,6 @@ export default function Home({ explainerContent }) {
     { id: 'wifi', label: 'Wi-Fi' },
     { id: 'text', label: 'Texto' },
     { id: 'email', label: 'E-mail' },
-    { id: 'event', label: 'Evento' }, // Novo Botão
     { id: 'vcard', label: 'vCard' },
     { id: 'message', label: 'SMS' },
     { id: 'pix', label: 'Pix' },
@@ -62,7 +61,6 @@ export default function Home({ explainerContent }) {
       case 'vcard': return <VCardMode />;
       case 'message': return <MessageMode />;
       case 'bitcoin': return <BitcoinMode />;
-      case 'event': return <EventMode />; // Renderiza
       default: return null;
     }
   };
