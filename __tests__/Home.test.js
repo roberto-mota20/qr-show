@@ -81,8 +81,8 @@ describe('Página Inicial (Gerador de QR Code)', () => {
     // O modal deve aparecer
     expect(screen.getByText(/Faltou o Código do País\?/i)).toBeInTheDocument();
 
-    // Seleciona Brasil (+55)
-    const brBtn = screen.getByText('Brasil (+55)');
+    // CORREÇÃO: Seleciona Brasil pelo nome (o código +55 está em outro elemento visual agora)
+    const brBtn = screen.getByText('Brasil');
     await user.click(brBtn);
 
     // Deve redirecionar com o número corrigido (55 + 11999998888)
