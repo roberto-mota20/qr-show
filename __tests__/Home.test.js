@@ -14,91 +14,157 @@ jest.mock('next/router', () => ({
   }),
 }));
 
+// Mock do módulo de países para garantir dados previsíveis
+jest.mock('../utils/countries', () => ({
+  countries: [
+    { name: "Brasil", code: "55" },
+    { name: "Estados Unidos", code: "1" }
+  ]
+}));
+
 describe('Página Inicial (Gerador de QR Code)', () => {
   
   beforeEach(() => {
-    pushMock.mockClear(); // Limpa o histórico do roteador antes de cada teste
+    pushMock.mockClear(); // Limpa o histórico do roteador
     window.localStorage.clear(); // Limpa o histórico local simulado
+    jest.clearAllMocks();
   });
 
-  it('deve renderizar o título e os botões de modo corretamente', () => {
-    render(<Home />);
+  // --- TESTES GERAIS ---
+  it('deve renderizar todos os botões de modo', () => {
+    render(<Home explainerContent="Conteúdo de teste" />);
     
-    // Verifica se a logo está na tela
     expect(screen.getByText(/kasper-/i)).toBeInTheDocument();
-    expect(screen.getByText(/labs/i)).toBeInTheDocument();
-
-    // Verifica se os botões de modo existem
+    
+    // Verifica a presença dos botões principais
     expect(screen.getByText('Link')).toBeInTheDocument();
+    expect(screen.getByText('WhatsApp')).toBeInTheDocument();
     expect(screen.getByText('Wi-Fi')).toBeInTheDocument();
+    expect(screen.getByText('vCard')).toBeInTheDocument();
     expect(screen.getByText('Pix')).toBeInTheDocument();
+    expect(screen.getByText('Bitcoin')).toBeInTheDocument();
   });
 
-  it('Modo Link: deve corrigir URL incompleta e redirecionar corretamente', async () => {
-    render(<Home />);
+  // --- TESTES DE LINK ---
+  it('Modo Link: deve corrigir URL incompleta', async () => {
+    render(<Home explainerContent="" />);
     const user = userEvent.setup();
 
-    // 1. O modo Link é o padrão. Digita "google" no input
+    // Digita "google" (Link é o padrão)
     const input = screen.getByPlaceholderText(/URL \(ex: kasper-labs.com\)/i);
     await user.type(input, 'google');
 
-    // 2. Clica em "Criar QR Code (Personalizável)"
+    // Gera
     const button = screen.getByText('Criar QR Code (Personalizável)');
     await user.click(button);
 
-    // 3. Verifica se redirecionou para a URL corrigida (https://google.com)
-    // A URL esperada é /full/https%3A%2F%2Fgoogle.com
-    const expectedUrl = 'https://google.com';
-    const encoded = encodeURIComponent(expectedUrl);
-    
-    expect(pushMock).toHaveBeenCalledWith(`/full/${encoded}`);
+    // Espera redirecionamento para https://google.com
+    const expected = encodeURIComponent('https://google.com');
+    expect(pushMock).toHaveBeenCalledWith(`/full/${expected}`);
   });
 
-  it('Modo Link: deve mostrar erro se tentar gerar vazio', async () => {
-    render(<Home />);
+  // --- TESTES DE WHATSAPP ---
+  it('Modo WhatsApp: deve detectar número curto e abrir modal de país', async () => {
+    render(<Home explainerContent="" />);
     const user = userEvent.setup();
 
-    // Clica sem digitar nada
-    const button = screen.getByText('Criar QR Code (Personalizável)');
-    await user.click(button);
+    // Muda para aba WhatsApp
+    await user.click(screen.getByText('WhatsApp'));
 
-    // Verifica se a mensagem de erro apareceu
-    expect(screen.getByText(/preencha a URL/i)).toBeInTheDocument();
+    // Digita número sem DDI (11 dígitos = Celular BR com DDD)
+    const input = screen.getByPlaceholderText(/WhatsApp com DDD e DDI/i);
+    await user.type(input, '11999998888');
+
+    // Tenta gerar
+    await user.click(screen.getByText('Criar QR Code (Rápido)'));
+
+    // O modal deve aparecer
+    expect(screen.getByText(/Faltou o Código do País\?/i)).toBeInTheDocument();
+
+    // Seleciona Brasil (+55)
+    const brBtn = screen.getByText('Brasil (+55)');
+    await user.click(brBtn);
+
+    // Deve redirecionar com o número corrigido (55 + 11999998888)
+    const expectedPhone = '5511999998888';
+    // O link gerado será https://wa.me/5511999998888?text=
+    expect(pushMock).toHaveBeenCalledWith(expect.stringContaining(expectedPhone));
+  });
+
+  // --- TESTES DE PIX ---
+  it('Modo Pix: deve validar campos obrigatórios na aba Manual', async () => {
+    render(<Home explainerContent="" />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Pix'));
+    await user.click(screen.getByText('Manual')); // Garante aba manual
+
+    // Tenta gerar vazio
+    await user.click(screen.getByText('Criar QR Code (Personalizável)'));
+
+    // Erro esperado
+    expect(screen.getByText(/preencha as informações obrigatórias/i)).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
   });
 
-  it('Modo Pix: deve permitir preenchimento manual e salvar no histórico', async () => {
-    render(<Home />);
+  it('Modo Pix: deve salvar no histórico ao gerar', async () => {
+    render(<Home explainerContent="" />);
     const user = userEvent.setup();
 
-    // 1. Muda para a aba Pix
-    const pixTab = screen.getByText('Pix');
-    await user.click(pixTab);
+    await user.click(screen.getByText('Pix'));
+    await user.click(screen.getByText('Manual'));
 
-    // 2. Muda para o modo Manual (o padrão é Importar ou Manual dependendo do estado inicial, garantimos clicando)
-    const manualBtn = screen.getByText('Manual');
-    await user.click(manualBtn);
+    // Preenche dados
+    await user.type(screen.getByPlaceholderText(/Chave Pix/i), '123456');
+    await user.type(screen.getByPlaceholderText(/Nome do Beneficiário/i), 'Kasper Teste');
+    await user.type(screen.getByPlaceholderText(/Cidade do Beneficiário/i), 'SP');
 
-    // 3. Preenche os campos obrigatórios
-    const keyInput = screen.getByPlaceholderText(/Chave Pix/i);
-    const nameInput = screen.getByPlaceholderText(/Nome do Beneficiário/i);
-    const cityInput = screen.getByPlaceholderText(/Cidade do Beneficiário/i);
+    await user.click(screen.getByText('Criar QR Code (Rápido)'));
 
-    await user.type(keyInput, '12345678900'); // CPF fictício
-    await user.type(nameInput, 'Fulano Teste');
-    await user.type(cityInput, 'Sao Paulo');
-
-    // 4. Gera o QR Code
-    const generateBtn = screen.getByText('Criar QR Code (Rápido)');
-    await user.click(generateBtn);
-
-    // 5. Verifica se o router foi chamado (significa que passou na validação e gerou o payload)
-    expect(pushMock).toHaveBeenCalled();
-
-    // 6. Verifica se salvou no localStorage
+    // Verifica localStorage
     expect(window.localStorage.setItem).toHaveBeenCalledWith(
-      'kasper_pix_history', 
-      expect.stringContaining('Fulano Teste')
+      'kasper_pix_history',
+      expect.stringContaining('Kasper Teste')
     );
+    expect(pushMock).toHaveBeenCalled();
   });
+
+  // --- TESTES DE VCARD ---
+  it('Modo vCard: deve gerar vCard corretamente', async () => {
+    render(<Home explainerContent="" />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('vCard'));
+
+    await user.type(screen.getByPlaceholderText('Nome'), 'João');
+    await user.type(screen.getByPlaceholderText(/Telefone/i), '99998888');
+
+    await user.click(screen.getByText('Criar QR Code (Personalizável)'));
+
+    // O payload deve conter BEGIN:VCARD e os dados
+    const callArgs = pushMock.mock.calls[0][0];
+    const decoded = decodeURIComponent(callArgs);
+    
+    expect(decoded).toContain('BEGIN:VCARD');
+    expect(decoded).toContain('FN:João');
+    expect(decoded).toContain('TEL;TYPE=CELL:99998888');
+  });
+
+  // --- TESTES DE BITCOIN ---
+  it('Modo Bitcoin: deve validar endereço curto', async () => {
+    render(<Home explainerContent="" />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByText('Bitcoin'));
+
+    // Digita endereço inválido (curto)
+    const input = screen.getByPlaceholderText(/Endereço da Carteira/i);
+    await user.type(input, '123'); // Muito curto
+
+    await user.click(screen.getByText('Criar QR Code (Rápido)'));
+
+    expect(screen.getByText(/endereço parece muito curto/i)).toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
 });
