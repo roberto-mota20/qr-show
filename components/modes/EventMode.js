@@ -81,12 +81,13 @@ export default function EventMode() {
             className="url-input" 
         />
 
-        {/* CORREÇÃO AQUI: 
-            Adicionado minWidth: 0 nos elementos filhos do flex.
-            Isso previne que inputs largos (como data) estoquem o container.
+        {/* CORREÇÃO DO LAYOUT:
+            Removido o 'minWidth: 0' anterior que causava o vazamento.
+            Definido 'minWidth: 250px' para garantir espaço suficiente para o calendário.
+            Se a tela for menor que 2 colunas de 250px + gap, o flex-wrap do CSS global jogará um para baixo.
         */}
         <div className="form-row" style={{marginTop: '1rem'}}>
-            <div style={{flex: 1, minWidth: 0}}>
+            <div style={{flex: 1, minWidth: '250px'}}>
                 <label style={{color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem'}}>Início</label>
                 <input 
                     type="datetime-local" 
@@ -96,7 +97,7 @@ export default function EventMode() {
                     required 
                 />
             </div>
-            <div style={{flex: 1, minWidth: 0}}>
+            <div style={{flex: 1, minWidth: '250px'}}>
                 <label style={{color: '#888', fontSize: '0.8rem', display: 'block', marginBottom: '0.3rem'}}>Fim (Opcional)</label>
                 <input 
                     type="datetime-local" 
