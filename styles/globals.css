@@ -981,10 +981,13 @@ a:hover {
     flex-wrap: wrap; /* CORREÇÃO: Permite quebra de linha */
   }
   
-  /* CORREÇÃO: Garante largura mínima para não espremer os inputs */
+  /* CORREÇÃO GLOBAL DE LAYOUT: 
+     Garante largura mínima para não espremer os inputs, especialmente datetime-local.
+     Aumentado de 200px para 260px para resolver o problema de vazamento no Modo Evento.
+  */
   .form-row > * {
     flex: 1;
-    min-width: 200px;
+    min-width: 260px;
   }
 }
 
